@@ -1,0 +1,105 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String     @id @default(auto()) @map("_id") @db.ObjectId
+  email            String?     @unique
+  password         String?
+  age              Int?       @default(0)
+  fullName        String?    @default("")
+  profileImage     String?    @default("")
+  phone            String?    @default("")
+  otp              Int?       @default(0)
+  role             UserRole   @default(USER)
+  otpExpiresAt     DateTime?  @default(now())
+  status           UserStatus @default(ACTIVE)
+  gender           Gender     @default(Male)
+  isOnline         Boolean    @default(false)
+  isVerifyEmail    Boolean    @default(false)
+  adminReq         AdminReq   @default(PENDING)
+  isDeleted   Boolean @default(false)
+
+  isNotificationOn Boolean @default(false)
+  isUserOnline     Boolean @default(false)
+  fcmToken         String? @default("")
+
+  accountLink      String?     @default("")
+  stripeAccountUrl String?     @default("")
+  stripeAccountId  String?     @default("")
+  stripeCustomerId String? @default("")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Notification     Notification[]
+
+  @@map("users")
+}
+
+
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
+  title     String
+  body      String
+  type      NotificationType @default(GENERAL)
+  data      String?
+  targetId  String?          @default("")
+  // targetId  String?          @db.ObjectId
+  slug      String?          @default("")
+  fcmToken  String?          @default("")
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // target    User?            @relation("ReceivedNotifications", fields: [targetId], references: [id], onDelete: Cascade)
+  @@map("notifications")
+}
+
+enum NotificationType {
+  GENERAL
+  LOGIN_SUCCESS
+  ORDER_PLACED
+  NEW_ORDER
+  UPDATE_PROFILE
+  REGISTRATION
+  PASSWORD_RESET
+  NEW_CHAT_MESSAGE
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+
+enum AdminReq {
+  APPROVED
+  PENDING
+  DECLINED
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+
+
+
+
+
