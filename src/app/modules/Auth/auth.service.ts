@@ -16,99 +16,6 @@ import { notificationService } from "../Notification/Notification.service";
 
 
 
-
-
-
-// user login service
-
-
-/* const createUserIntoDb = async (payload: any & { referredId?: string }) => {
-  const {
-    email,
-    phone,
-    password,
-    firstName,
-    lastName,
-    role,
-    gender,
-    fcmToken
-  } = payload;
-
-  // ----- Required fields -----
-  if (!email) throw new ApiError(httpStatus.BAD_REQUEST, "Email is required");
-  if (!phone) throw new ApiError(httpStatus.BAD_REQUEST, "Phone number is required");
-  if (!password) throw new ApiError(httpStatus.BAD_REQUEST, "Password is required");
-
-  // ----- Check Email Exists -----
-  const existingEmail = await prisma.user.findUnique({
-    where: { email },
-  });
-  if (existingEmail) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Email already exists");
-  }
-
-  // ----- Check Phone Exists -----
-  const existingPhone = await prisma.user.findUnique({
-    where: { phone },
-  });
-  if (existingPhone) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Phone number already exists");
-  }
-
-  // ----- Validate Role -----
-  const allowedRoles = Object.values(UserRole); // ["USER","SELLER","SERVICE_PROVIDER"]
-  if (!role || !allowedRoles.includes(role)) {
-    throw new ApiError(httpStatus.BAD_REQUEST, `Role must be one of: ${allowedRoles.join(", ")}`);
-  }
-
-
-  // ----- Hash Password -----
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // ----- Create User -----
-  const newUser = await prisma.user.create({
-    data: {
-      email,
-      phone,
-      password: hashedPassword,
-      firstName,
-      lastName,
-      role,
-      gender: gender ?? "Male",
-      fcmToken,
-    },
-  });
-
-  if (!newUser) {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Failed to create user");
-  }
-
-  // ----- Generate OTP & save (WITHOUT sending email) -----
-  const otp = Number(crypto.randomInt(1000, 9999));
-  const otpExpires = new Date(Date.now() + 5 * 60 * 1000);
-
-  await prisma.user.update({
-    where: { id: newUser.id },
-    data: { otp, otpExpiresAt: otpExpires },
-  });
-
-  //  NO EMAIL SENDING
-  //  NO registrationOtpTemplate
-  //  NO emailSender()
-
-  // ----- JWT Token -----
-  const token = jwtHelpers.generateToken(
-    { id: newUser.id, email: newUser.email, role: newUser.role },
-    config.jwt.jwt_secret as Secret,
-    config.jwt.expires_in!
-  );
-
-  return {
-    user: { ...newUser, password: undefined },
-    token,
-  };
-}; */
-
 const createUserIntoDb = async (payload: any) => {
   const {
     email,
@@ -175,40 +82,22 @@ const createUserIntoDb = async (payload: any) => {
 
 
 const loginUser = async (payload: {
-  email?: string;
-  phone?: string;
+  email: string;
   password: string;
   fcmToken?: string;
 }) => {
-  
-  if (!payload.email && !payload.phone) {
-    throw new ApiError(
-      httpStatus.BAD_REQUEST,
-      "Email or Phone is required to login"
-    );
+  const { email, password, fcmToken } = payload;
+
+  if (!email || !password) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Email and password are required");
   }
 
-  let userData = null;
-
-  // if email provided → search by email
-  if (payload.email) {
-    userData = await prisma.user.findUnique({
-      where: { email: payload.email },
-    });
-  }
-
-  // else search by phone
-  if (!userData && payload.phone) {
-    userData = await prisma.user.findFirst({
-      where: { phone: payload.phone },
-    });
-  }
+  const userData = await prisma.user.findUnique({
+    where: { email },
+  });
 
   if (!userData) {
-    throw new ApiError(
-      httpStatus.NOT_FOUND,
-      "User not found with this email or phone!"
-    );
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found with this email!");
   }
 
   const isCorrectPassword = await bcrypt.compare(
