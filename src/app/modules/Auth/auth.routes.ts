@@ -9,7 +9,6 @@ const router = express.Router();
 
 router.post(
   "/register",
-  fileUploader.uploadSingle,
   AuthController.createUser
 );
 

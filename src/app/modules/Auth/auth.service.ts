@@ -109,10 +109,7 @@ import { notificationService } from "../Notification/Notification.service";
   };
 }; */
 
-const createUserIntoDb = async (
-  payload: any,
-  file?: Express.Multer.File
-) => {
+const createUserIntoDb = async (payload: any) => {
   const {
     email,
     phone,
@@ -137,24 +134,15 @@ const createUserIntoDb = async (
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  let profileImageUrl = null;
-
-  // ✔ Only this part added
-  if (file) {
-    const uploaded = await fileUploader.uploadToDigitalOcean(file);
-    profileImageUrl = uploaded.Location;
-  }
-
   const newUser = await prisma.user.create({
     data: {
       email,
       phone,
       password: hashedPassword,
-      fullName: `${firstName} ${lastName}`,
+      fullName: firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || ""),
       role,
-      gender,
+      gender: gender || "Male",
       fcmToken,
-      profileImage: profileImageUrl || null,
     },
   });
 

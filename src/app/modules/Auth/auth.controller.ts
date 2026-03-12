@@ -18,10 +18,7 @@ const result = await AuthServices.createUserIntoDb(req.body);
 }); */
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
-  const body = req.body.data ? JSON.parse(req.body.data) : req.body;
-  const file = req.file;
-
-  const result = await AuthServices.createUserIntoDb(body, file);
+  const result = await AuthServices.createUserIntoDb(req.body);
 
   sendResponse(res, {
     statusCode: httpStatus.CREATED,
