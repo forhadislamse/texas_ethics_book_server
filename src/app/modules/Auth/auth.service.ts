@@ -114,8 +114,7 @@ const createUserIntoDb = async (payload: any) => {
     email,
     phone,
     password,
-    firstName,
-    lastName,
+    fullName,
     role,
     gender,
     fcmToken
@@ -129,9 +128,6 @@ const createUserIntoDb = async (payload: any) => {
   const existingEmail = await prisma.user.findUnique({ where: { email } });
   if (existingEmail) throw new ApiError(400, "Email already exists");
 
-  const existingPhone = await prisma.user.findFirst({ where: { phone } });
-  if (existingPhone) throw new ApiError(400, "Phone number already exists");
-
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const newUser = await prisma.user.create({
@@ -139,7 +135,7 @@ const createUserIntoDb = async (payload: any) => {
       email,
       phone,
       password: hashedPassword,
-      fullName: firstName && lastName ? `${firstName} ${lastName}` : (firstName || lastName || ""),
+      fullName,
       role,
       gender: gender || "Male",
       fcmToken,
@@ -158,44 +154,22 @@ const createUserIntoDb = async (payload: any) => {
     },
   });
 
-  // ----------------------------------------------------------------
-  // 🚀 ADD REGISTRATION NOTIFICATION
-  // ----------------------------------------------------------------
-  const notificationPayload = {
-    title: "Welcome to Our Platform!",
-    body: "Your account has been created successfully. Please verify your email.",
-    type: NotificationType.REGISTRATION,
-    data: JSON.stringify({ userId: newUser.id }),
-    targetId: newUser.id,
-    slug: "user-registration",
-    fcmToken: fcmToken || "",
-  };
-
-  try {
-    // 1️⃣ Push notification send (if FCM token exists)
-    if (newUser.fcmToken) {
-      await notificationService.sendNotification(
-        newUser.fcmToken,
-        notificationPayload,
-        newUser.id
-      );
-    }
-
-    // 2️⃣ Save notification in database
-    await notificationService.saveNotification(notificationPayload, newUser.id);
-  } catch (error) {
-    console.error("Failed to send or save registration notification:", error);
-  }
-
   const token = jwtHelpers.generateToken(
     { id: newUser.id, email: newUser.email, role: newUser.role },
     config.jwt.jwt_secret!,
     config.jwt.expires_in!
   );
 
+  const refreshToken = jwtHelpers.generateToken(
+    { id: newUser.id, role: newUser.role, email: newUser.email },
+    config.jwt.refresh_token_secret!,
+    config.jwt.refresh_token_expires_in!
+  );
+
   return {
     user: { ...newUser, password: undefined },
     token,
+    refreshToken,
   };
 };
 

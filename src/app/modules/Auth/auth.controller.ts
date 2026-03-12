@@ -5,17 +5,6 @@ import sendResponse from "../../../shared/sendResponse";
 import httpStatus from "http-status";
 import { fileUploader } from "../../../helpars/fileUploader";
 
-/* const createUser = catchAsync(async (req: Request, res: Response) => {
-  
-const result = await AuthServices.createUserIntoDb(req.body);
-
-  sendResponse(res, {
-    statusCode: httpStatus.CREATED,
-    success: true,
-    message: "User registered successfully",
-    data: result,
-  });
-}); */
 
 const createUser = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthServices.createUserIntoDb(req.body);
