@@ -9,9 +9,9 @@ const emailSender = async (email: string, html: string, subject: string) => {
   try {
     const payload = {
       sender: {
-        name: "baham support",
+        name: "andcates support",
         // email: "svetlana.shabdeen@gmail.com"
-        email: "abratechno978@gmail.com"
+        email: "i.rforhad@gmail.com"
       },
       to: [
         {
