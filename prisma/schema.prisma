@@ -33,7 +33,8 @@ model User {
   stripeAccountUrl String?     @default("")
   stripeAccountId  String?     @default("")
   stripeCustomerId String? @default("")
-
+  isSubscribed       Boolean    @default(false)
+  subscriptionExpiresAt DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -96,10 +97,35 @@ enum Gender {
   Male
   Female
   Other
+}model Chapter {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  number    String    // e.g. "556"
+  title     String
+  order     Int
+  sections  Section[]
+  isLocked  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("chapters")
 }
 
+model Section {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  chapterId       String   @db.ObjectId
+  number          String   // e.g. "556.001"
+  title           String
+  content         String   // Full text content
+  practiceNotes   String?
+  ethicsOpinions  String?
+  caseLaw         String?
+  agOpinions      String?
+  crossReferences String?
+  addedBy         String?
+  order           Int
+  chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-
-
-
-
+  @@map("sections")
+}

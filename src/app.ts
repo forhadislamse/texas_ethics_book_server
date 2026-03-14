@@ -18,7 +18,16 @@ const app: Application = express();
 app.use(cors());
 app.use(cookieParser());
 
-app.use(express.json());
+// Special handling for Stripe Webhook to get raw body
+app.use(
+  express.json({
+    verify: (req: any, res, buf) => {
+      if (req.originalUrl.includes("/webhook")) {
+        req.rawBody = buf;
+      }
+    },
+  })
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
