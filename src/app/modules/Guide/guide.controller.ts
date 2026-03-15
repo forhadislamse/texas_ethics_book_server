@@ -5,6 +5,8 @@ import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { GuideServices } from './guide.services';
 
+// ─────────────────────────── GET ────────────────────────────
+
 const getAllChapters = catchAsync(async (req: Request, res: Response) => {
     const result = await GuideServices.getAllChapters();
     sendResponse(res, {
@@ -48,9 +50,46 @@ const searchGuide = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+// ─────────────────────────── ADMIN CRUD ────────────────────────────
+
+const createChapter = catchAsync(async (req: Request, res: Response) => {
+    const result = await GuideServices.createChapter(req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: 'Chapter created successfully',
+        data: result
+    });
+});
+
+const updateChapter = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.updateChapter(id, req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Chapter updated successfully',
+        data: result
+    });
+});
+
+const deleteChapter = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.deleteChapter(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    });
+});
+
 export const GuideController = {
     getAllChapters,
     getChapterById,
     getSectionById,
-    searchGuide
+    searchGuide,
+    createChapter,
+    updateChapter,
+    deleteChapter
 };

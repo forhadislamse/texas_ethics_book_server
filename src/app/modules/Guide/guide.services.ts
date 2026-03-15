@@ -1,8 +1,11 @@
 
 import { PrismaClient } from '@prisma/client';
 import { IGuideSearchQuery } from './guide.interface';
+import ApiError from '../../../errors/ApiErrors';
 
 const prisma = new PrismaClient();
+
+// ─────────────────────────── READ ────────────────────────────
 
 const getAllChapters = async () => {
     const chapters = await prisma.chapter.findMany({
@@ -10,6 +13,15 @@ const getAllChapters = async () => {
         include: {
             _count: {
                 select: { sections: true }
+            },
+            sections: {
+                orderBy: { order: 'asc' },
+                select: {
+                    id: true,
+                    number: true,
+                    title: true,
+                    order: true
+                }
             }
         }
     });
@@ -31,6 +43,8 @@ const getChapterById = async (id: string) => {
             }
         }
     });
+
+    if (!chapter) throw new ApiError(404, 'Chapter not found');
     return chapter;
 };
 
@@ -47,6 +61,8 @@ const getSectionById = async (id: string) => {
             }
         }
     });
+
+    if (!section) throw new ApiError(404, 'Section not found');
     return section;
 };
 
@@ -56,8 +72,6 @@ const searchGuide = async (query: IGuideSearchQuery) => {
 
     if (!q) return { data: [], total: 0 };
 
-    // Simple text search using Prisma's contains for MongoDB
-    // Note: For advanced fuzzy search, MongoDB Atlas Search index is needed
     const sections = await prisma.section.findMany({
         where: {
             OR: [
@@ -99,9 +113,64 @@ const searchGuide = async (query: IGuideSearchQuery) => {
     };
 };
 
+// ─────────────────────────── ADMIN CRUD ────────────────────────────
+
+const createChapter = async (payload: { number: string; title: string; order: number; isLocked?: boolean }) => {
+    const { number, title, order, isLocked = true } = payload;
+
+    if (!number || !title || order === undefined) {
+        throw new ApiError(400, 'number, title, and order are required');
+    }
+
+    const existing = await prisma.chapter.findUnique({ where: { number } });
+    if (existing) {
+        throw new ApiError(409, `Chapter with number "${number}" already exists`);
+    }
+
+    const chapter = await prisma.chapter.create({
+        data: { number, title, order, isLocked }
+    });
+
+    return chapter;
+};
+
+const updateChapter = async (
+    id: string,
+    payload: { number?: string; title?: string; order?: number; isLocked?: boolean }
+) => {
+    const existing = await prisma.chapter.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Chapter not found');
+
+    // If updating number, check uniqueness
+    if (payload.number && payload.number !== existing.number) {
+        const duplicate = await prisma.chapter.findUnique({ where: { number: payload.number } });
+        if (duplicate) throw new ApiError(409, `Chapter with number "${payload.number}" already exists`);
+    }
+
+    const updated = await prisma.chapter.update({
+        where: { id },
+        data: payload
+    });
+
+    return updated;
+};
+
+const deleteChapter = async (id: string) => {
+    const existing = await prisma.chapter.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Chapter not found');
+
+    // Cascade delete is handled by Prisma relation (onDelete: Cascade)
+    await prisma.chapter.delete({ where: { id } });
+
+    return { message: 'Chapter deleted successfully' };
+};
+
 export const GuideServices = {
     getAllChapters,
     getChapterById,
     getSectionById,
-    searchGuide
+    searchGuide,
+    createChapter,
+    updateChapter,
+    deleteChapter
 };

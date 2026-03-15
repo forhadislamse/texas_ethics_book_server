@@ -8,41 +8,40 @@ datasource db {
 }
 
 model User {
-  id               String     @id @default(auto()) @map("_id") @db.ObjectId
-  email            String?     @unique
-  password         String?
-  age              Int?       @default(0)
-  fullName        String?    @default("")
-  profileImage     String?    @default("")
-  phone            String?    @default("")
-  otp              Int?       @default(0)
-  role             UserRole   @default(USER)
-  otpExpiresAt     DateTime?  @default(now())
-  status           UserStatus @default(ACTIVE)
-  gender           Gender     @default(Male)
-  isOnline         Boolean    @default(false)
-  isVerifyEmail    Boolean    @default(false)
-  adminReq         AdminReq   @default(PENDING)
-  isDeleted   Boolean @default(false)
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
+  email         String?    @unique
+  password      String?
+  age           Int?       @default(0)
+  fullName      String?    @default("")
+  profileImage  String?    @default("")
+  phone         String?    @default("")
+  otp           Int?       @default(0)
+  role          UserRole   @default(USER)
+  otpExpiresAt  DateTime?  @default(now())
+  status        UserStatus @default(ACTIVE)
+  gender        Gender     @default(Male)
+  isOnline      Boolean    @default(false)
+  isVerifyEmail Boolean    @default(false)
+  adminReq      AdminReq   @default(PENDING)
+  isDeleted     Boolean    @default(false)
 
   isNotificationOn Boolean @default(false)
   isUserOnline     Boolean @default(false)
   fcmToken         String? @default("")
 
-  accountLink      String?     @default("")
-  stripeAccountUrl String?     @default("")
-  stripeAccountId  String?     @default("")
-  stripeCustomerId String? @default("")
-  isSubscribed       Boolean    @default(false)
+  accountLink           String?   @default("")
+  stripeAccountUrl      String?   @default("")
+  stripeAccountId       String?   @default("")
+  stripeCustomerId      String?   @default("")
+  isSubscribed          Boolean   @default(false)
   subscriptionExpiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
-  Notification     Notification[]
+  Notification Notification[]
 
   @@map("users")
 }
-
 
 model Notification {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
@@ -80,7 +79,6 @@ enum UserRole {
   ADMIN
 }
 
-
 enum AdminReq {
   APPROVED
   PENDING
@@ -97,9 +95,10 @@ enum Gender {
   Male
   Female
   Other
-}model Chapter {
+}
+model Chapter {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  number    String    // e.g. "556"
+  number    String    @unique // e.g. "556"
   title     String
   order     Int
   sections  Section[]
@@ -113,9 +112,9 @@ enum Gender {
 model Section {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   chapterId       String   @db.ObjectId
-  number          String   // e.g. "556.001"
+  number          String // e.g. "556.001"
   title           String
-  content         String   // Full text content
+  content         String // Full text content
   practiceNotes   String?
   ethicsOpinions  String?
   caseLaw         String?
