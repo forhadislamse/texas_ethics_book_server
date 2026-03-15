@@ -84,6 +84,38 @@ const deleteChapter = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const createSection = catchAsync(async (req: Request, res: Response) => {
+    const result = await GuideServices.createSection(req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: 'Section created successfully',
+        data: result
+    });
+});
+
+const updateSection = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.updateSection(id, req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Section updated successfully',
+        data: result
+    });
+});
+
+const deleteSection = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.deleteSection(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    });
+});
+
 export const GuideController = {
     getAllChapters,
     getChapterById,
@@ -91,5 +123,8 @@ export const GuideController = {
     searchGuide,
     createChapter,
     updateChapter,
-    deleteChapter
+    deleteChapter,
+    createSection,
+    updateSection,
+    deleteSection
 };

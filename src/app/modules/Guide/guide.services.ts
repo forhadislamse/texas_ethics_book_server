@@ -58,7 +58,9 @@ const getSectionById = async (id: string) => {
                     number: true,
                     title: true
                 }
-            }
+            },
+            internalRefs: true,
+            externalRefs: true
         }
     });
 
@@ -86,7 +88,9 @@ const searchGuide = async (query: IGuideSearchQuery) => {
                     number: true,
                     title: true
                 }
-            }
+            },
+            internalRefs: true,
+            externalRefs: true
         },
         orderBy: { order: 'asc' },
         skip,
@@ -113,7 +117,7 @@ const searchGuide = async (query: IGuideSearchQuery) => {
     };
 };
 
-// ─────────────────────────── ADMIN CRUD ────────────────────────────
+// ─────────────────────────── ADMIN CRUD: CHAPTER ────────────────────────────
 
 const createChapter = async (payload: { number: string; title: string; order: number; isLocked?: boolean }) => {
     const { number, title, order, isLocked = true } = payload;
@@ -165,6 +169,78 @@ const deleteChapter = async (id: string) => {
     return { message: 'Chapter deleted successfully' };
 };
 
+// ─────────────────────────── ADMIN CRUD: SECTION ────────────────────────────
+
+const createSection = async (payload: any) => {
+    const { internalRefs, externalRefs, ...sectionData } = payload;
+
+    if (!sectionData.chapterId || !sectionData.number || !sectionData.title || sectionData.order === undefined) {
+        throw new ApiError(400, 'chapterId, number, title, and order are required');
+    }
+
+    const chapter = await prisma.chapter.findUnique({ where: { id: sectionData.chapterId } });
+    if (!chapter) throw new ApiError(404, 'Chapter not found');
+
+    const section = await prisma.section.create({
+        data: {
+            ...sectionData,
+            internalRefs: internalRefs ? { create: internalRefs } : undefined,
+            externalRefs: externalRefs ? { create: externalRefs } : undefined
+        },
+        include: {
+            internalRefs: true,
+            externalRefs: true
+        }
+    });
+
+    return section;
+};
+
+const updateSection = async (id: string, payload: any) => {
+    const { internalRefs, externalRefs, ...sectionData } = payload;
+
+    const existing = await prisma.section.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Section not found');
+
+    const updateData: any = { ...sectionData };
+
+    // To update references, we can delete existing and create new ones with the provided arrays
+    if (internalRefs !== undefined) {
+        updateData.internalRefs = {
+            deleteMany: {},
+            create: internalRefs
+        };
+    }
+
+    if (externalRefs !== undefined) {
+        updateData.externalRefs = {
+            deleteMany: {},
+            create: externalRefs
+        };
+    }
+
+    const updated = await prisma.section.update({
+        where: { id },
+        data: updateData,
+        include: {
+            internalRefs: true,
+            externalRefs: true
+        }
+    });
+
+    return updated;
+};
+
+const deleteSection = async (id: string) => {
+    const existing = await prisma.section.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Section not found');
+
+    // Prisma relation onDelete: Cascade will take care of internalRefs and externalRefs
+    await prisma.section.delete({ where: { id } });
+
+    return { message: 'Section deleted successfully' };
+};
+
 export const GuideServices = {
     getAllChapters,
     getChapterById,
@@ -172,5 +248,8 @@ export const GuideServices = {
     searchGuide,
     createChapter,
     updateChapter,
-    deleteChapter
+    deleteChapter,
+    createSection,
+    updateSection,
+    deleteSection
 };

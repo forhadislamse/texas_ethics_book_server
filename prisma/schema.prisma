@@ -96,6 +96,38 @@ enum Gender {
   Female
   Other
 }
+// model Chapter {
+//   id        String    @id @default(auto()) @map("_id") @db.ObjectId
+//   number    String    @unique // e.g. "556"
+//   title     String
+//   order     Int
+//   sections  Section[]
+//   isLocked  Boolean   @default(true)
+//   createdAt DateTime  @default(now())
+//   updatedAt DateTime  @updatedAt
+
+//   @@map("chapters")
+// }
+
+// model Section {
+//   id              String   @id @default(auto()) @map("_id") @db.ObjectId
+//   chapterId       String   @db.ObjectId
+//   number          String // e.g. "556.001"
+//   title           String
+//   content         String // Full text content
+//   practiceNotes   String?
+//   ethicsOpinions  String?
+//   caseLaw         String?
+//   agOpinions      String?
+//   crossReferences String?
+//   addedBy         String?
+//   order           Int
+//   chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+//   createdAt       DateTime @default(now())
+//   updatedAt       DateTime @updatedAt
+
+//   @@map("sections")
+// }
 model Chapter {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
   number    String    @unique // e.g. "556"
@@ -112,9 +144,9 @@ model Chapter {
 model Section {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   chapterId       String   @db.ObjectId
-  number          String // e.g. "556.001"
+  number          String   // e.g. "556.001"
   title           String
-  content         String // Full text content
+  content         String   // Full text content
   practiceNotes   String?
   ethicsOpinions  String?
   caseLaw         String?
@@ -123,8 +155,36 @@ model Section {
   addedBy         String?
   order           Int
   chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  
+  // ডাইনামিক রেফারেন্সগুলোর জন্য রিলেশন (যদি ইমেজের মতো পপ-আপ চান)
+  internalRefs    InternalRef[]
+  externalRefs    ExternalRef[]
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@map("sections")
+}
+
+// পপ-আপ ফিচারের জন্য ডাইনামিক ইন্টারনাল লিঙ্ক
+model InternalRef {
+  id           String  @id @default(auto()) @map("_id") @db.ObjectId
+  linkText     String  // e.g. "Section 61.003"
+  popupTitle   String  // e.g. "Education Code"
+  popupExcerpt String  // পপ-আপে যা দেখাবে
+  sectionId    String  @db.ObjectId
+  section      Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("internal_refs")
+}
+
+// এক্সটারনাল লিঙ্ক (যেমন অফিশিয়াল সরকারি ওয়েবসাইট)
+model ExternalRef {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  linkText  String  // e.g. "5 U.S.C. §§ 1501-08"
+  url       String  // https://...
+  sectionId String  @db.ObjectId
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@map("external_refs")
 }

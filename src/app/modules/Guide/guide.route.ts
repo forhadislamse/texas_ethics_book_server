@@ -32,4 +32,13 @@ router.patch('/chapters/:id', auth(UserRole.ADMIN), GuideController.updateChapte
 // Delete a chapter by ID (cascades to sections)
 router.delete('/chapters/:id', auth(UserRole.ADMIN), GuideController.deleteChapter);
 
+// Create a new section (with internal/external refs)
+router.post('/sections', auth(UserRole.ADMIN), GuideController.createSection);
+
+// Update a section by ID
+router.patch('/sections/:id', auth(UserRole.ADMIN), GuideController.updateSection);
+
+// Delete a section by ID
+router.delete('/sections/:id', auth(UserRole.ADMIN), GuideController.deleteSection);
+
 export const GuideRoutes = router;
