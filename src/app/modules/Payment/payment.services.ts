@@ -1,22 +1,47 @@
-
 import Stripe from 'stripe';
 import config from '../../../config';
 import prisma from '../../../shared/prisma';
+import ApiError from '../../../errors/ApiErrors';
 
 const stripe = new Stripe(config.stripe.secret_key as string, {
     apiVersion: '2024-06-20' as any,
 });
 
-const createCheckoutSession = async (userId: string) => {
+/**
+ * Creates a Stripe Subscription (Incomplete) and returns the client_secret 
+ * so the frontend can confirm the payment using Stripe Elements.
+ */
+const createSubscriptionIntent = async (userId: string, planId: string) => {
+    // 1. Fetch User
     const user = await prisma.user.findUnique({
         where: { id: userId },
     });
 
     if (!user) {
-        throw new Error('User not found');
+        throw new ApiError(404, 'User not found');
     }
 
-    // Use existing customer or create a new one
+    // 2. Fetch Subscription Plan
+    const plan = await prisma.subscriptionPlan.findUnique({
+        where: { id: planId }
+    });
+
+    if (!plan) {
+        throw new ApiError(404, 'Subscription plan not found');
+    }
+
+    if (!plan.isActive) {
+        throw new ApiError(400, 'This plan is currently not active');
+    }
+
+    // Free plan bypass (No Stripe needed)
+    if (plan.price === 0) {
+        // Handle free plan logic directly here or via a separate endpoint
+        // For now, return a specific response that frontend can use to bypass Stripe
+        return { isFree: true, planDetails: plan };
+    }
+
+    // 3. Ensure User is a Stripe Customer
     let customerId = user.stripeCustomerId;
     if (!customerId) {
         const customer = await stripe.customers.create({
@@ -32,34 +57,70 @@ const createCheckoutSession = async (userId: string) => {
         });
     }
 
-    const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [
-            {
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: 'Legal Guide Subscription',
-                        description: 'Unlimited access to the Legal Practice Guide',
-                    },
-                    unit_amount: 4900, // $49.00
-                    recurring: {
-                        interval: 'month',
-                    },
-                },
-                quantity: 1,
-            },
-        ],
-        mode: 'subscription',
-        success_url: `${config.client.url}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${config.client.url}/payment/cancel`,
-        metadata: {
-            userId: user.id,
-        },
+    // 4. Handle Stripe Products/Prices dynamically
+    // In a prod app, you might map DB plans to actual Stripe Price IDs.
+    // Since we only have DB pricing, we can dynamically create a Price/Product on the fly
+    // or use adhoc prices. Stripe requires a `price` ID for subscriptions.
+    
+    // Check if we need to create a Stripe Product and Price
+    // For simplicity, we search for an existing product based on the plan ID, or create it.
+    let stripePriceId: string;
+    
+    // We use Stripe's metadata to link Stripe Prices with our DB Plans
+    const prices = await stripe.prices.list({
+        lookup_keys: [`plan_${plan.id}`],
+        limit: 1
     });
 
-    return { url: session.url };
+    if (prices.data.length > 0) {
+        stripePriceId = prices.data[0].id;
+    } else {
+        // Create Product
+        const product = await stripe.products.create({
+            name: plan.name,
+            description: plan.features.join(', ').substring(0, 250), // Truncate if too long
+            metadata: { planId: plan.id }
+        });
+        
+        // Create Price
+        const price = await stripe.prices.create({
+            product: product.id,
+            unit_amount: Math.round(plan.price * 100), // Stripe expects cents
+            currency: plan.currency.toLowerCase(),
+            recurring: {
+                interval: plan.duration === 'yearly' ? 'year' : 'month',
+            },
+            lookup_key: `plan_${plan.id}`
+        });
+
+        stripePriceId = price.id;
+    }
+
+    // 5. Create Subscription with state: incomplete
+    const subscription = await stripe.subscriptions.create({
+        customer: customerId,
+        items: [{ price: stripePriceId }],
+        payment_behavior: 'default_incomplete',
+        payment_settings: { save_default_payment_method: 'on_subscription' },
+        expand: ['latest_invoice.payment_intent'],
+        metadata: {
+            userId: user.id,
+            planId: plan.id
+        }
+    });
+
+    // Extract client secret
+    const invoice = subscription.latest_invoice as Stripe.Invoice;
+    const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
+
+    if (!paymentIntent?.client_secret) {
+        throw new ApiError(500, 'Failed to generate payment intent');
+    }
+
+    return { 
+        subscriptionId: subscription.id, 
+        clientSecret: paymentIntent.client_secret 
+    };
 };
 
 const handleWebhook = async (payload: string, sig: string) => {
@@ -76,25 +137,6 @@ const handleWebhook = async (payload: string, sig: string) => {
     }
 
     switch (event.type) {
-        case 'checkout.session.completed':
-            const session = event.data.object as Stripe.Checkout.Session;
-            const userId = session.metadata?.userId;
-            const subscriptionId = session.subscription as string;
-
-            if (userId) {
-                const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-                const expiresAt = new Date(subscription.current_period_end * 1000);
-
-                await prisma.user.update({
-                    where: { id: userId },
-                    data: {
-                        isSubscribed: true,
-                        subscriptionExpiresAt: expiresAt,
-                    },
-                });
-            }
-            break;
-
         case 'invoice.payment_succeeded':
             const invoice = event.data.object as Stripe.Invoice;
             const subId = invoice.subscription as string;
@@ -147,6 +189,6 @@ const handleWebhook = async (payload: string, sig: string) => {
 };
 
 export const PaymentServices = {
-    createCheckoutSession,
+    createSubscriptionIntent,
     handleWebhook,
 };
