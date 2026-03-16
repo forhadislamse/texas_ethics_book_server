@@ -188,3 +188,19 @@ model ExternalRef {
 
   @@map("external_refs")
 }
+
+// সাবস্ক্রিপশন প্ল্যান মডেল
+model SubscriptionPlan {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique // e.g. "Free Plan", "Monthly Plan", "Yearly Plan"
+  price     Float    // e.g. 0, 899, 2499
+  currency  String   @default("USD")
+  duration  String?  // e.g. "monthly", "yearly"
+  features  String[] // Array of strings e.g. ["Full access...", "Powerful keyword search..."]
+  isPopular Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("subscription_plans")
+}

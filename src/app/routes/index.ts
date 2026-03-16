@@ -4,6 +4,8 @@ import { userRoutes } from "../modules/User/user.route";
 import { GuideRoutes } from "../modules/Guide/guide.route";
 import { PaymentRoutes } from "../modules/Payment/payment.route";
 
+import { PlanRoutes } from "../modules/Plan/plan.route";
+
 import { fileUploadRoutes } from "../modules/fileUpload/fileUpload.routes";
 import admin from "../../shared/firebase";
 
@@ -42,6 +44,10 @@ const moduleRoutes = [
   {
     path: "/payment",
     route: PaymentRoutes,
+  },
+  {
+    path: "/plans",
+    route: PlanRoutes,
   },
 ];
 
