@@ -14,38 +14,42 @@ async function seedPlans() {
       {
         name: 'Free Plan',
         price: 0,
+        currency: 'USD',
         duration: 'free',
         isPopular: false,
         features: [
           'Access to selected preview chapters',
           'Limited search functionality',
-          'View sample rules and commentary',
-          'Experience the digital reading interface'
+          'Read-only access to TOC',
+          'Experience the digital interface'
         ]
       },
       {
         name: 'Monthly Plan',
         price: 899,
+        currency: 'USD',
         duration: 'monthly',
         isPopular: true,
         features: [
           'Full access to all chapters and sections',
           'Powerful keyword search',
-          'Internal rule popups for quick reference',
-          'External links to cases and opinions',
-          'Access on desktop, tablet, and mobile'
+          'Practice Notes & Citations',
+          'Ethics Opinions Database',
+          'Case Law & AG Opinions',
+          'Access on all devices'
         ]
       },
       {
         name: 'Yearly Plan',
         price: 2499,
+        currency: 'USD',
         duration: 'yearly',
         isPopular: false,
         features: [
-          'Everything included in Monthly Access',
-          'Full guide access for 12 months',
-          'Priority updates when new content is added',
-          'Best value for attorneys and legal researchers'
+          'Everything in Monthly Access',
+          'Cost-effective yearly billing',
+          'Priority support',
+          'Updates to all future editions'
         ]
       }
     ];
