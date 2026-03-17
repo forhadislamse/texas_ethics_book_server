@@ -15,13 +15,13 @@ async function seedPlans() {
         name: 'Free Plan',
         price: 0,
         currency: 'USD',
-        duration: 'free',
+        duration: 'unlimited',
         isPopular: false,
         features: [
           'Access to selected preview chapters',
           'Limited search functionality',
-          'Read-only access to TOC',
-          'Experience the digital interface'
+          'View sample rules and commentary',
+          'Experience the digital reading interface'
         ]
       },
       {
@@ -34,8 +34,8 @@ async function seedPlans() {
           'Full access to all chapters and sections',
           'Powerful keyword search',
           'Practice Notes & Citations',
-          'Ethics Opinions Database',
-          'Case Law & AG Opinions',
+          'Ethics Commission Opinions Database',
+          'Case Law & Attorney General Opinions',
           'Access on all devices'
         ]
       },
@@ -46,10 +46,10 @@ async function seedPlans() {
         duration: 'yearly',
         isPopular: false,
         features: [
-          'Everything in Monthly Access',
-          'Cost-effective yearly billing',
-          'Priority support',
-          'Updates to all future editions'
+          'Everything included in Monthly Access',
+          'Full guide access for 12 months',
+          'Priority updates when new content is added',
+          'Best value for attorneys and legal researchers'
         ]
       }
     ];
