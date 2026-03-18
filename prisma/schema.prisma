@@ -129,13 +129,16 @@ enum Gender {
 //   @@map("sections")
 // }
 model Chapter {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  number    String    @unique // e.g. "556"
-  title     String
-  order     Int
-  sections  Section[]
-  isLocked  Boolean   @default(true)
-  createdAt DateTime  @default(now())
+  id            String    @id @default(auto()) @map("_id") @db.ObjectId
+  code          String?   // e.g. "GOVERNMENT CODE"
+  titleLevel    String?   // e.g. "Title 5. Open Government; Ethics"
+  subtitleLevel String?   // e.g. "Subtitle A. Open Government"
+  number        String    @unique // e.g. "556"
+  title         String
+  order         Int
+  sections      Section[]
+  isLocked      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   @@map("chapters")
@@ -153,6 +156,7 @@ model Section {
   agOpinions      String?
   crossReferences String?
   addedBy         String?
+  subChapter      String?  // e.g. "SUBCHAPTER A. GENERAL PROVISIONS"
   order           Int
   chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   

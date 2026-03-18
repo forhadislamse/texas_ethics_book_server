@@ -20,7 +20,8 @@ const getAllChapters = async () => {
                     id: true,
                     number: true,
                     title: true,
-                    order: true
+                    order: true,
+                    subChapter: true
                 }
             }
         }
@@ -38,7 +39,8 @@ const getChapterById = async (id: string) => {
                     id: true,
                     number: true,
                     title: true,
-                    order: true
+                    order: true,
+                    subChapter: true
                 }
             }
         }
@@ -56,7 +58,10 @@ const getSectionById = async (id: string) => {
                 select: {
                     id: true,
                     number: true,
-                    title: true
+                    title: true,
+                    code: true,
+                    titleLevel: true,
+                    subtitleLevel: true
                 }
             },
             internalRefs: true,
@@ -79,14 +84,18 @@ const searchGuide = async (query: IGuideSearchQuery) => {
             OR: [
                 { title: { contains: q, mode: 'insensitive' } },
                 { content: { contains: q, mode: 'insensitive' } },
-                { practiceNotes: { contains: q, mode: 'insensitive' } }
+                { practiceNotes: { contains: q, mode: 'insensitive' } },
+                { subChapter: { contains: q, mode: 'insensitive' } }
             ]
         },
         include: {
             chapter: {
                 select: {
                     number: true,
-                    title: true
+                    title: true,
+                    code: true,
+                    titleLevel: true,
+                    subtitleLevel: true
                 }
             },
             internalRefs: true,
@@ -102,7 +111,8 @@ const searchGuide = async (query: IGuideSearchQuery) => {
             OR: [
                 { title: { contains: q, mode: 'insensitive' } },
                 { content: { contains: q, mode: 'insensitive' } },
-                { practiceNotes: { contains: q, mode: 'insensitive' } }
+                { practiceNotes: { contains: q, mode: 'insensitive' } },
+                { subChapter: { contains: q, mode: 'insensitive' } }
             ]
         }
     });
@@ -119,29 +129,25 @@ const searchGuide = async (query: IGuideSearchQuery) => {
 
 // ─────────────────────────── ADMIN CRUD: CHAPTER ────────────────────────────
 
-const createChapter = async (payload: { number: string; title: string; order: number; isLocked?: boolean }) => {
-    const { number, title, order, isLocked = true } = payload;
-
-    if (!number || !title || order === undefined) {
+const createChapter = async (payload: any) => {
+    // Basic validation
+    if (!payload.number || !payload.title || payload.order === undefined) {
         throw new ApiError(400, 'number, title, and order are required');
     }
 
-    const existing = await prisma.chapter.findUnique({ where: { number } });
+    const existing = await prisma.chapter.findUnique({ where: { number: payload.number } });
     if (existing) {
-        throw new ApiError(409, `Chapter with number "${number}" already exists`);
+        throw new ApiError(409, `Chapter with number "${payload.number}" already exists`);
     }
 
     const chapter = await prisma.chapter.create({
-        data: { number, title, order, isLocked }
+        data: payload
     });
 
     return chapter;
 };
 
-const updateChapter = async (
-    id: string,
-    payload: { number?: string; title?: string; order?: number; isLocked?: boolean }
-) => {
+const updateChapter = async (id: string, payload: any) => {
     const existing = await prisma.chapter.findUnique({ where: { id } });
     if (!existing) throw new ApiError(404, 'Chapter not found');
 

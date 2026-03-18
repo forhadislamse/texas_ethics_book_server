@@ -78,10 +78,13 @@ async function importData() {
             // Using upsert to handle uniqueness smoothly, though we just deleted all
             const chapter = await prisma.chapter.upsert({
                 where: { number: chData.number },
-                update: {}, // if exists, do nothing or update order
+                update: {}, 
                 create: {
                     number: chData.number,
                     title: chData.title,
+                    code: chData.code || null,
+                    titleLevel: chData.titleLevel || null,
+                    subtitleLevel: chData.subtitleLevel || null,
                     order: chapterOrder++,
                     isLocked: true // Default all to locked
                 }
@@ -108,6 +111,7 @@ async function importData() {
                         number: secData.number,
                         title: secData.title,
                         content: secData.content,
+                        subChapter: secData.subChapter || null,
                         practiceNotes: secData.metadata.practiceNotes || null,
                         ethicsOpinions: secData.metadata.ethicsOpinions || null,
                         caseLaw: secData.metadata.caseLaw || null,
