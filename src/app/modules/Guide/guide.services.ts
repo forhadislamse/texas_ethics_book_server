@@ -204,18 +204,53 @@ const updateSection = async (id: string, payload: any) => {
 
     const updateData: any = { ...sectionData };
 
-    // To update references, we can delete existing and create new ones with the provided arrays
+    // Update Internal References (keeping IDs stable if provided)
     if (internalRefs !== undefined) {
+        const toUpdate = internalRefs.filter((ref: any) => ref.id);
+        const toCreate = internalRefs.filter((ref: any) => !ref.id);
+        const toUpdateIds = toUpdate.map((ref: any) => ref.id);
+
         updateData.internalRefs = {
-            deleteMany: {},
-            create: internalRefs
+            deleteMany: {
+                id: { notIn: toUpdateIds }
+            },
+            create: toCreate.map((ref: any) => ({
+                linkText: ref.linkText,
+                popupTitle: ref.popupTitle,
+                popupExcerpt: ref.popupExcerpt
+            })),
+            update: toUpdate.map((ref: any) => ({
+                where: { id: ref.id },
+                data: {
+                    linkText: ref.linkText,
+                    popupTitle: ref.popupTitle,
+                    popupExcerpt: ref.popupExcerpt
+                }
+            }))
         };
     }
 
+    // Update External References (keeping IDs stable if provided)
     if (externalRefs !== undefined) {
+        const toUpdate = externalRefs.filter((ref: any) => ref.id);
+        const toCreate = externalRefs.filter((ref: any) => !ref.id);
+        const toUpdateIds = toUpdate.map((ref: any) => ref.id);
+
         updateData.externalRefs = {
-            deleteMany: {},
-            create: externalRefs
+            deleteMany: {
+                id: { notIn: toUpdateIds }
+            },
+            create: toCreate.map((ref: any) => ({
+                linkText: ref.linkText,
+                url: ref.url
+            })),
+            update: toUpdate.map((ref: any) => ({
+                where: { id: ref.id },
+                data: {
+                    linkText: ref.linkText,
+                    url: ref.url
+                }
+            }))
         };
     }
 
