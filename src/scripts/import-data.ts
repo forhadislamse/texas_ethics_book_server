@@ -18,7 +18,7 @@ function extractReferences(text: string) {
     if (internalMatches) {
         // Remove duplicates to avoid redundant popups for the same exact keyword phrase in one section
         const uniqueMatches = [...new Set(internalMatches)];
-        
+
         uniqueMatches.forEach(match => {
             internalRefs.push({
                 linkText: match,
@@ -34,7 +34,7 @@ function extractReferences(text: string) {
 
     if (urlMatches) {
         const uniqueUrls = [...new Set(urlMatches)];
-        
+
         uniqueUrls.forEach(url => {
             // Clean up trailing punctuation if caught in regex
             const cleanUrl = url.replace(/[.,;:]$/, '');
@@ -50,14 +50,24 @@ function extractReferences(text: string) {
 
 async function importData() {
     try {
-        const filePath = 'structured_guide_v3.json';
+        const filePath = 'structured_guide_v5.json';
         if (!fs.existsSync(filePath)) {
             console.error(`Error: File ${filePath} not found. Please run parse-text.ts first.`);
             return;
         }
 
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        console.log(`Loaded ${data.length} chapters from JSON.`);
+        
+        // Sort chapters numerically (MISC at the end)
+        data.sort((a: any, b: any) => {
+            if (a.number === 'MISC') return 1;
+            if (b.number === 'MISC') return -1;
+            const aNum = parseFloat(a.number);
+            const bNum = parseFloat(b.number);
+            return aNum - bNum;
+        });
+
+        console.log(`Loaded and sorted ${data.length} chapters from JSON.`);
 
         // Clear existing data (use with caution)
         console.log('Clearing existing data from Guide models...');
@@ -74,11 +84,11 @@ async function importData() {
             }
 
             console.log(`Importing Chapter ${chData.number}: ${chData.title}`);
-            
+
             // Using upsert to handle uniqueness smoothly, though we just deleted all
             const chapter = await prisma.chapter.upsert({
                 where: { number: chData.number },
-                update: {}, 
+                update: {},
                 create: {
                     number: chData.number,
                     title: chData.title,
@@ -92,7 +102,7 @@ async function importData() {
 
             let sectionOrder = 0;
             for (const secData of chData.sections) {
-                
+
                 // Combine all text to extract references
                 const fullText = [
                     secData.content,
@@ -119,7 +129,7 @@ async function importData() {
                         crossReferences: secData.metadata.crossReferences || null,
                         addedBy: secData.metadata.addedBy || null,
                         order: sectionOrder++,
-                        
+
                         // Create nested records directly
                         internalRefs: {
                             create: internalRefs
