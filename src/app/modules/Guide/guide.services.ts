@@ -2,6 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { IGuideSearchQuery } from './guide.interface';
 import ApiError from '../../../errors/ApiErrors';
+import { paginationHelper } from '../../../helpars/paginationHelper';
 
 const prisma = new PrismaClient();
 
@@ -73,11 +74,59 @@ const getSectionById = async (id: string) => {
     return section;
 };
 
-const getAllSections = async (query: { page?: number; limit?: number }) => {
-    const { page = 1, limit = 10 } = query;
-    const skip = (Number(page) - 1) * Number(limit);
+const getAllSections = async (query: { 
+    page?: number; 
+    limit?: number; 
+    searchTerm?: string;
+    number?: string;
+    title?: string;
+    chapterNumber?: string;
+    sortBy?: string;
+    sortOrder?: string;
+}) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
+    const { searchTerm, number, title, chapterNumber } = query;
+
+    const where: any = {};
+
+    if (searchTerm) {
+        where.OR = [
+            { number: { contains: searchTerm, mode: 'insensitive' } },
+            { title: { contains: searchTerm, mode: 'insensitive' } },
+            { chapter: { number: { contains: searchTerm, mode: 'insensitive' } } }
+        ];
+    }
+
+    if (number) {
+        where.number = { contains: number, mode: 'insensitive' };
+    }
+
+    if (title) {
+        where.title = { contains: title, mode: 'insensitive' };
+    }
+
+    if (chapterNumber) {
+        where.chapter = { 
+            number: { contains: chapterNumber, mode: 'insensitive' } 
+        };
+    }
+
+    // Default sorting by Chapter -> Section order if not specified
+    const orderBy: any = query.sortBy 
+        ? { [sortBy]: sortOrder }
+        : [
+            {
+                chapter: {
+                    order: 'asc'
+                }
+            },
+            {
+                order: 'asc'
+            }
+        ];
 
     const sections = await prisma.section.findMany({
+        where,
         include: {
             chapter: {
                 select: {
@@ -87,28 +136,19 @@ const getAllSections = async (query: { page?: number; limit?: number }) => {
                 }
             }
         },
-        orderBy: [
-            {
-                chapter: {
-                    order: 'asc'
-                }
-            },
-            {
-                order: 'asc'
-            }
-        ],
+        orderBy,
         skip,
-        take: Number(limit)
+        take: limit
     });
 
-    const total = await prisma.section.count();
+    const total = await prisma.section.count({ where });
 
     return {
         data: sections,
         meta: {
             total,
-            page: Number(page),
-            limit: Number(limit)
+            page,
+            limit
         }
     };
 };
