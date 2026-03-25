@@ -29,7 +29,26 @@ const handleWebhook = catchAsync(async (req: Request & { rawBody?: Buffer }, res
     res.status(200).send(result);
 });
 
+const confirmPayment = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params; // payment record ID
+    const { paymentIntentId } = req.body;
+
+    if (!paymentIntentId) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "paymentIntentId is required");
+    }
+
+    const result = await PaymentServices.confirmPayment(id, paymentIntentId);
+    
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Payment confirmed successfully. Subscription activated.",
+        data: result,
+    });
+});
+
 export const PaymentController = {
     createSubscriptionIntent,
     handleWebhook,
+    confirmPayment
 };

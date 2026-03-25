@@ -10,19 +10,19 @@ const router = express.Router();
 // ─────────────── Public / Authenticated User Routes ───────────────
 
 // Get all chapters with sections (used by Reader Sidebar)
-router.get('/chapters', GuideController.getAllChapters);
+router.get('/chapters', auth(UserRole.USER, UserRole.ADMIN), GuideController.getAllChapters);
 
 // Get a single chapter with its sections
-router.get('/chapters/:id', GuideController.getChapterById);
+router.get('/chapters/:id', auth(UserRole.USER, UserRole.ADMIN), GuideController.getChapterById);
 
 // Get all sections (paginated)
-router.get('/sections', GuideController.getAllSections);
+router.get('/sections', auth(UserRole.USER, UserRole.ADMIN), GuideController.getAllSections);
 
 // Get a single section (requires subscription)
-router.get('/sections/:id', GuideController.getSectionById);
+router.get('/sections/:id', auth(UserRole.USER, UserRole.ADMIN), GuideController.getSectionById);
 
 // Search guide (requires subscription)
-router.get('/search', GuideController.searchGuide);
+router.get('/search', auth(UserRole.USER, UserRole.ADMIN), GuideController.searchGuide);
 
 // ─────────────── Admin-Only Routes ───────────────
 

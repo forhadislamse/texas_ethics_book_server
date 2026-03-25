@@ -16,9 +16,25 @@ const getAllChapters = async (query: {
     title?: string;
     sortBy?: string;
     sortOrder?: string;
+    userId?: string;
+    userRole?: string;
 }) => {
-    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
-    const { searchTerm, number, title } = query;
+    const { searchTerm, number, title, userId, userRole } = query;
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination({
+        ...query,
+        limit: query.limit ? Number(query.limit) : 100 // Default to 100 to show all chapters in sidebar
+    });
+
+    // Get user subscription status
+    let isSubscribed = userRole === 'ADMIN';
+    if (!isSubscribed && userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isSubscribed: true, subscriptionExpiresAt: true }
+        });
+        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
+        isSubscribed = !!user?.isSubscribed && !isExpired;
+    }
 
     const where: any = {};
 
@@ -43,9 +59,6 @@ const getAllChapters = async (query: {
         skip,
         take: limit,
         include: {
-            _count: {
-                select: { sections: true }
-            },
             sections: {
                 orderBy: { order: 'asc' },
                 select: {
@@ -55,14 +68,22 @@ const getAllChapters = async (query: {
                     order: true,
                     subChapter: true
                 }
+            },
+            _count: {
+                select: { sections: true }
             }
         }
     });
 
     const total = await prisma.chapter.count({ where });
 
+    const data = chapters.map(ch => ({
+        ...ch,
+        isLocked: ch.order > 1 && !isSubscribed
+    }));
+
     return {
-        data: chapters,
+        data,
         meta: {
             total,
             page,
@@ -71,7 +92,7 @@ const getAllChapters = async (query: {
     };
 };
 
-const getChapterById = async (id: string) => {
+const getChapterById = async (id: string, userId?: string, userRole?: string) => {
     const chapter = await prisma.chapter.findUnique({
         where: { id },
         include: {
@@ -89,10 +110,28 @@ const getChapterById = async (id: string) => {
     });
 
     if (!chapter) throw new ApiError(404, 'Chapter not found');
+
+    // Access control: Only first chapter (order 1) is free. Admins have full access.
+    if (chapter.order > 1 && userRole !== 'ADMIN') {
+        if (!userId) {
+            throw new ApiError(401, 'Please login to access this chapter');
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isSubscribed: true, subscriptionExpiresAt: true }
+        });
+
+        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
+        if (!user?.isSubscribed || isExpired) {
+            throw new ApiError(403, 'Subscription required to access this chapter');
+        }
+    }
+
     return chapter;
 };
 
-const getSectionById = async (id: string) => {
+const getSectionById = async (id: string, userId?: string, userRole?: string) => {
     const section = await prisma.section.findUnique({
         where: { id },
         include: {
@@ -103,7 +142,8 @@ const getSectionById = async (id: string) => {
                     title: true,
                     code: true,
                     titleLevel: true,
-                    subtitleLevel: true
+                    subtitleLevel: true,
+                    order: true
                 }
             },
             internalRefs: true,
@@ -112,21 +152,52 @@ const getSectionById = async (id: string) => {
     });
 
     if (!section) throw new ApiError(404, 'Section not found');
+
+    // Access control: Only sections in the first chapter (order 1) are free. Admins have full access.
+    if (section.chapter.order > 1 && userRole !== 'ADMIN') {
+        if (!userId) {
+            throw new ApiError(401, 'Please login to access this section');
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isSubscribed: true, subscriptionExpiresAt: true }
+        });
+
+        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
+        if (!user?.isSubscribed || isExpired) {
+            throw new ApiError(403, 'Subscription required to access this section');
+        }
+    }
+
     return section;
 };
 
-const getAllSections = async (query: { 
-    page?: number; 
-    limit?: number; 
+const getAllSections = async (query: {
+    page?: number;
+    limit?: number;
     searchTerm?: string;
     number?: string;
     title?: string;
     chapterNumber?: string;
     sortBy?: string;
     sortOrder?: string;
+    userId?: string;
+    userRole?: string;
 }) => {
     const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
-    const { searchTerm, number, title, chapterNumber } = query;
+    const { searchTerm, number, title, chapterNumber, userId, userRole } = query;
+
+    // Get user subscription status
+    let isSubscribed = userRole === 'ADMIN';
+    if (!isSubscribed && userId) {
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { isSubscribed: true, subscriptionExpiresAt: true }
+        });
+        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
+        isSubscribed = !!user?.isSubscribed && !isExpired;
+    }
 
     const where: any = {};
 
@@ -147,13 +218,13 @@ const getAllSections = async (query: {
     }
 
     if (chapterNumber) {
-        where.chapter = { 
-            number: { contains: chapterNumber, mode: 'insensitive' } 
+        where.chapter = {
+            number: { contains: chapterNumber, mode: 'insensitive' }
         };
     }
 
     // Default sorting by Chapter -> Section order if not specified
-    const orderBy: any = query.sortBy 
+    const orderBy: any = query.sortBy
         ? { [sortBy]: sortOrder }
         : [
             {
@@ -184,8 +255,13 @@ const getAllSections = async (query: {
 
     const total = await prisma.section.count({ where });
 
+    const data = sections.map(sec => ({
+        ...sec,
+        isLocked: sec.chapter.order > 1 && !isSubscribed
+    }));
+
     return {
-        data: sections,
+        data,
         meta: {
             total,
             page,

@@ -117,6 +117,18 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         throw new ApiError(500, 'Failed to generate payment intent');
     }
 
+    // 6. Record Payment in DB as PENDING
+    // @ts-ignore
+    await prisma.payment.create({
+        data: {
+            userId: user.id,
+            planId: plan.id,
+            amount: plan.price,
+            status: 'PENDING',
+            transactionId: paymentIntent.id
+        }
+    });
+
     return { 
         subscriptionId: subscription.id, 
         clientSecret: paymentIntent.client_secret 
@@ -140,25 +152,35 @@ const handleWebhook = async (payload: string, sig: string) => {
         case 'invoice.payment_succeeded':
             const invoice = event.data.object as Stripe.Invoice;
             const subId = invoice.subscription as string;
+            const paymentIntentId = invoice.payment_intent as string;
             
             if (subId) {
                 const subscription = await stripe.subscriptions.retrieve(subId);
                 const expiresAt = new Date(subscription.current_period_end * 1000);
                 
-                // Find user by stripeCustomerId
-                const customer = await prisma.user.findFirst({
-                    where: { stripeCustomerId: invoice.customer as string }
-                });
+                // Get planId from subscription metadata
+                const planId = subscription.metadata.planId;
+                const userId = subscription.metadata.userId;
 
-                if (customer) {
-                    await prisma.user.update({
-                        where: { id: customer.id },
-                        data: {
-                            isSubscribed: true,
-                            subscriptionExpiresAt: expiresAt,
-                        },
+                // Update Payment Status
+                if (paymentIntentId) {
+                    // @ts-ignore
+                    await prisma.payment.updateMany({
+                        where: { transactionId: paymentIntentId },
+                        data: { status: 'PAID' }
                     });
                 }
+
+                // Update User Subscription
+                // @ts-ignore
+                await prisma.user.update({
+                    where: { id: userId },
+                    data: {
+                        isSubscribed: true,
+                        planId: planId,
+                        subscriptionExpiresAt: expiresAt,
+                    },
+                });
             }
             break;
 
@@ -188,7 +210,60 @@ const handleWebhook = async (payload: string, sig: string) => {
     return { received: true };
 };
 
+const confirmPayment = async (paymentId: string, paymentIntentId: string) => {
+    // 1. Retrieve the payment intent from Stripe to verify status
+    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    if (paymentIntent.status !== "succeeded") {
+        throw new ApiError(400, `Payment not confirmed. Stripe status: ${paymentIntent.status}`);
+    }
+
+    // 2. Fetch the Payment record from our DB
+    // @ts-ignore
+    const payment = await prisma.payment.findUnique({
+        where: { id: paymentId },
+        include: { plan: true }
+    });
+
+    if (!payment) {
+        throw new ApiError(404, "Payment record not found");
+    }
+
+    if (payment.status === 'PAID') {
+        return { message: "Payment already confirmed", payment };
+    }
+
+    // 3. Update Payment Status in DB
+    // @ts-ignore
+    const updatedPayment = await prisma.payment.update({
+        where: { id: paymentId },
+        data: { status: 'PAID' }
+    });
+
+    // 4. Update User Subscription Details
+    const duration = payment.plan.duration || 'monthly';
+    const expiresAt = new Date();
+    if (duration === 'yearly') {
+        expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    } else {
+        expiresAt.setMonth(expiresAt.getMonth() + 1);
+    }
+
+    // @ts-ignore
+    await prisma.user.update({
+        where: { id: payment.userId },
+        data: {
+            isSubscribed: true,
+            planId: payment.planId,
+            subscriptionExpiresAt: expiresAt,
+        },
+    });
+
+    return updatedPayment;
+};
+
 export const PaymentServices = {
     createSubscriptionIntent,
     handleWebhook,
+    confirmPayment
 };

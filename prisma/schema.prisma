@@ -34,11 +34,14 @@ model User {
   stripeAccountId       String?   @default("")
   stripeCustomerId      String?   @default("")
   isSubscribed          Boolean   @default(false)
+  planId                String?   @db.ObjectId
+  plan                  SubscriptionPlan? @relation(fields: [planId], references: [id])
   subscriptionExpiresAt DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
   Notification Notification[]
+  Payment      Payment[]
 
   @@map("users")
 }
@@ -206,5 +209,29 @@ model SubscriptionPlan {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  User    User[]
+  Payment Payment[]
+
   @@map("subscription_plans")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+model Payment {
+  id            String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId        String           @db.ObjectId
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String           @db.ObjectId
+  plan          SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  amount        Float
+  status        PaymentStatus    @default(PENDING)
+  transactionId String?          @unique
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@map("payments")
 }

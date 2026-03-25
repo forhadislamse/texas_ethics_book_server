@@ -8,7 +8,11 @@ import { GuideServices } from './guide.services';
 // ─────────────────────────── GET ────────────────────────────
 
 const getAllChapters = catchAsync(async (req: Request, res: Response) => {
-    const result = await GuideServices.getAllChapters(req.query);
+    const result = await GuideServices.getAllChapters({ 
+        ...req.query, 
+        userId: req.user?.id,
+        userRole: req.user?.role 
+    });
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -20,7 +24,7 @@ const getAllChapters = catchAsync(async (req: Request, res: Response) => {
 
 const getChapterById = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await GuideServices.getChapterById(id);
+    const result = await GuideServices.getChapterById(id, req.user?.id, req.user?.role);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -31,7 +35,7 @@ const getChapterById = catchAsync(async (req: Request, res: Response) => {
 
 const getSectionById = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const result = await GuideServices.getSectionById(id);
+    const result = await GuideServices.getSectionById(id, req.user?.id, req.user?.role);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
@@ -41,7 +45,11 @@ const getSectionById = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllSections = catchAsync(async (req: Request, res: Response) => {
-    const result = await GuideServices.getAllSections(req.query);
+    const result = await GuideServices.getAllSections({ 
+        ...req.query, 
+        userId: req.user?.id,
+        userRole: req.user?.role 
+    });
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
