@@ -282,6 +282,72 @@ const deleteSection = async (id: string) => {
     return { message: 'Section deleted successfully' };
 };
 
+// ─────────────────────────── ADMIN CRUD: INTERNAL REF ────────────────────────────
+
+const createInternalRef = async (payload: any) => {
+    const { sectionId, linkText, popupTitle, popupExcerpt } = payload;
+    if (!sectionId || !linkText || !popupTitle || !popupExcerpt) {
+        throw new ApiError(400, 'sectionId, linkText, popupTitle, and popupExcerpt are required');
+    }
+
+    const result = await prisma.internalRef.create({
+        data: payload
+    });
+    return result;
+};
+
+const updateInternalRef = async (id: string, payload: any) => {
+    const existing = await prisma.internalRef.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Internal reference not found');
+
+    const result = await prisma.internalRef.update({
+        where: { id },
+        data: payload
+    });
+    return result;
+};
+
+const deleteInternalRef = async (id: string) => {
+    const existing = await prisma.internalRef.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'Internal reference not found');
+
+    await prisma.internalRef.delete({ where: { id } });
+    return { message: 'Internal reference deleted successfully' };
+};
+
+// ─────────────────────────── ADMIN CRUD: EXTERNAL REF ────────────────────────────
+
+const createExternalRef = async (payload: any) => {
+    const { sectionId, linkText, url } = payload;
+    if (!sectionId || !linkText || !url) {
+        throw new ApiError(400, 'sectionId, linkText, and url are required');
+    }
+
+    const result = await prisma.externalRef.create({
+        data: payload
+    });
+    return result;
+};
+
+const updateExternalRef = async (id: string, payload: any) => {
+    const existing = await prisma.externalRef.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'External reference not found');
+
+    const result = await prisma.externalRef.update({
+        where: { id },
+        data: payload
+    });
+    return result;
+};
+
+const deleteExternalRef = async (id: string) => {
+    const existing = await prisma.externalRef.findUnique({ where: { id } });
+    if (!existing) throw new ApiError(404, 'External reference not found');
+
+    await prisma.externalRef.delete({ where: { id } });
+    return { message: 'External reference deleted successfully' };
+};
+
 export const GuideServices = {
     getAllChapters,
     getChapterById,
@@ -292,5 +358,11 @@ export const GuideServices = {
     deleteChapter,
     createSection,
     updateSection,
-    deleteSection
+    deleteSection,
+    createInternalRef,
+    updateInternalRef,
+    deleteInternalRef,
+    createExternalRef,
+    updateExternalRef,
+    deleteExternalRef
 };

@@ -116,6 +116,70 @@ const deleteSection = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const createInternalRef = catchAsync(async (req: Request, res: Response) => {
+    const result = await GuideServices.createInternalRef(req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: 'Internal reference created successfully',
+        data: result
+    });
+});
+
+const updateInternalRef = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.updateInternalRef(id, req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Internal reference updated successfully',
+        data: result
+    });
+});
+
+const deleteInternalRef = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.deleteInternalRef(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    });
+});
+
+const createExternalRef = catchAsync(async (req: Request, res: Response) => {
+    const result = await GuideServices.createExternalRef(req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.CREATED,
+        success: true,
+        message: 'External reference created successfully',
+        data: result
+    });
+});
+
+const updateExternalRef = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.updateExternalRef(id, req.body);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'External reference updated successfully',
+        data: result
+    });
+});
+
+const deleteExternalRef = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const result = await GuideServices.deleteExternalRef(id);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: result.message,
+        data: null
+    });
+});
+
 export const GuideController = {
     getAllChapters,
     getChapterById,
@@ -126,5 +190,11 @@ export const GuideController = {
     deleteChapter,
     createSection,
     updateSection,
-    deleteSection
+    deleteSection,
+    createInternalRef,
+    updateInternalRef,
+    deleteInternalRef,
+    createExternalRef,
+    updateExternalRef,
+    deleteExternalRef
 };

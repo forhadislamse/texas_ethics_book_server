@@ -41,4 +41,16 @@ router.patch('/sections/:id', auth(UserRole.ADMIN), GuideController.updateSectio
 // Delete a section by ID
 router.delete('/sections/:id', auth(UserRole.ADMIN), GuideController.deleteSection);
 
+// ─────────────── Admin-Only Reference Routes ───────────────
+
+// Internal References
+router.post('/internal-refs', auth(UserRole.ADMIN), GuideController.createInternalRef);
+router.patch('/internal-refs/:id', auth(UserRole.ADMIN), GuideController.updateInternalRef);
+router.delete('/internal-refs/:id', auth(UserRole.ADMIN), GuideController.deleteInternalRef);
+
+// External References
+router.post('/external-refs', auth(UserRole.ADMIN), GuideController.createExternalRef);
+router.patch('/external-refs/:id', auth(UserRole.ADMIN), GuideController.updateExternalRef);
+router.delete('/external-refs/:id', auth(UserRole.ADMIN), GuideController.deleteExternalRef);
+
 export const GuideRoutes = router;
