@@ -119,7 +119,7 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
 
     // 6. Record Payment in DB as PENDING
     // @ts-ignore
-    await prisma.payment.create({
+    const paymentRecord = await prisma.payment.create({
         data: {
             userId: user.id,
             planId: plan.id,
@@ -131,7 +131,8 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
 
     return { 
         subscriptionId: subscription.id, 
-        clientSecret: paymentIntent.client_secret 
+        clientSecret: paymentIntent.client_secret,
+        orderId: paymentRecord.id
     };
 };
 
