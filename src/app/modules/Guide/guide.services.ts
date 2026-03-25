@@ -8,9 +8,40 @@ const prisma = new PrismaClient();
 
 // ─────────────────────────── READ ────────────────────────────
 
-const getAllChapters = async () => {
+const getAllChapters = async (query: {
+    page?: number;
+    limit?: number;
+    searchTerm?: string;
+    number?: string;
+    title?: string;
+    sortBy?: string;
+    sortOrder?: string;
+}) => {
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination(query);
+    const { searchTerm, number, title } = query;
+
+    const where: any = {};
+
+    if (searchTerm) {
+        where.OR = [
+            { number: { contains: searchTerm, mode: 'insensitive' } },
+            { title: { contains: searchTerm, mode: 'insensitive' } }
+        ];
+    }
+
+    if (number) {
+        where.number = { contains: number, mode: 'insensitive' };
+    }
+
+    if (title) {
+        where.title = { contains: title, mode: 'insensitive' };
+    }
+
     const chapters = await prisma.chapter.findMany({
-        orderBy: { order: 'asc' },
+        where,
+        orderBy: query.sortBy ? { [sortBy]: sortOrder } : { order: 'asc' },
+        skip,
+        take: limit,
         include: {
             _count: {
                 select: { sections: true }
@@ -27,7 +58,17 @@ const getAllChapters = async () => {
             }
         }
     });
-    return chapters;
+
+    const total = await prisma.chapter.count({ where });
+
+    return {
+        data: chapters,
+        meta: {
+            total,
+            page,
+            limit
+        }
+    };
 };
 
 const getChapterById = async (id: string) => {

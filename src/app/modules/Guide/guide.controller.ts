@@ -8,12 +8,13 @@ import { GuideServices } from './guide.services';
 // ─────────────────────────── GET ────────────────────────────
 
 const getAllChapters = catchAsync(async (req: Request, res: Response) => {
-    const result = await GuideServices.getAllChapters();
+    const result = await GuideServices.getAllChapters(req.query);
     sendResponse(res, {
         statusCode: httpStatus.OK,
         success: true,
         message: 'Chapters retrieved successfully',
-        data: result
+        data: result.data,
+        meta: result.meta
     });
 });
 
