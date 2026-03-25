@@ -58,16 +58,7 @@ async function importData() {
 
         const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         
-        // Sort chapters numerically (MISC at the end)
-        data.sort((a: any, b: any) => {
-            if (a.number === 'MISC') return 1;
-            if (b.number === 'MISC') return -1;
-            const aNum = parseFloat(a.number);
-            const bNum = parseFloat(b.number);
-            return aNum - bNum;
-        });
-
-        console.log(`Loaded and sorted ${data.length} chapters from JSON.`);
+        console.log(`Loaded ${data.length} chapters from JSON.`);
 
         // Clear existing data (use with caution)
         console.log('Clearing existing data from Guide models...');
@@ -76,7 +67,7 @@ async function importData() {
         await prisma.section.deleteMany({});
         await prisma.chapter.deleteMany({});
 
-        let chapterOrder = 0;
+        let chapterOrder = 1;
         for (const chData of data) {
             if (!chData.sections || chData.sections.length === 0) {
                 console.log(`Skipping empty chapter: ${chData.number} - ${chData.title}`);
@@ -100,7 +91,7 @@ async function importData() {
                 }
             });
 
-            let sectionOrder = 0;
+            let sectionOrder = 1;
             for (const secData of chData.sections) {
 
                 // Combine all text to extract references
