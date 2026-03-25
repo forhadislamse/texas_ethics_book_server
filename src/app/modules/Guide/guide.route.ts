@@ -15,6 +15,9 @@ router.get('/chapters', GuideController.getAllChapters);
 // Get a single chapter with its sections
 router.get('/chapters/:id', GuideController.getChapterById);
 
+// Get all sections (paginated)
+router.get('/sections', GuideController.getAllSections);
+
 // Get a single section (requires subscription)
 router.get('/sections/:id', GuideController.getSectionById);
 

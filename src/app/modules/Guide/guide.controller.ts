@@ -39,6 +39,17 @@ const getSectionById = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getAllSections = catchAsync(async (req: Request, res: Response) => {
+    const result = await GuideServices.getAllSections(req.query);
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Sections retrieved successfully',
+        data: result.data,
+        meta: result.meta
+    });
+});
+
 const searchGuide = catchAsync(async (req: Request, res: Response) => {
     const result = await GuideServices.searchGuide(req.query);
     sendResponse(res, {
@@ -184,6 +195,7 @@ export const GuideController = {
     getAllChapters,
     getChapterById,
     getSectionById,
+    getAllSections,
     searchGuide,
     createChapter,
     updateChapter,

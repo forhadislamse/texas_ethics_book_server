@@ -73,6 +73,46 @@ const getSectionById = async (id: string) => {
     return section;
 };
 
+const getAllSections = async (query: { page?: number; limit?: number }) => {
+    const { page = 1, limit = 10 } = query;
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const sections = await prisma.section.findMany({
+        include: {
+            chapter: {
+                select: {
+                    number: true,
+                    title: true,
+                    order: true
+                }
+            }
+        },
+        orderBy: [
+            {
+                chapter: {
+                    order: 'asc'
+                }
+            },
+            {
+                order: 'asc'
+            }
+        ],
+        skip,
+        take: Number(limit)
+    });
+
+    const total = await prisma.section.count();
+
+    return {
+        data: sections,
+        meta: {
+            total,
+            page: Number(page),
+            limit: Number(limit)
+        }
+    };
+};
+
 const searchGuide = async (query: IGuideSearchQuery) => {
     const { q, page = 1, limit = 10 } = query;
     const skip = (Number(page) - 1) * Number(limit);
@@ -352,6 +392,7 @@ export const GuideServices = {
     getAllChapters,
     getChapterById,
     getSectionById,
+    getAllSections,
     searchGuide,
     createChapter,
     updateChapter,
