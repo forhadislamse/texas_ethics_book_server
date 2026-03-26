@@ -2,6 +2,7 @@ import Stripe from 'stripe';
 import config from '../../../config';
 import prisma from '../../../shared/prisma';
 import ApiError from '../../../errors/ApiErrors';
+import httpStatus from 'http-status';
 
 const stripe = new Stripe(config.stripe.secret_key as string, {
     apiVersion: '2024-06-20' as any,
@@ -19,6 +20,11 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
 
     if (!user) {
         throw new ApiError(404, 'User not found');
+    }
+
+    // Check if user already has this specific plan active
+    if (user.isSubscribed && user.planId === planId && user.subscriptionExpiresAt && user.subscriptionExpiresAt > new Date()) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "You already have an active subscription for this plan.");
     }
 
     // 2. Fetch Subscription Plan
@@ -57,16 +63,45 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         });
     }
 
-    // 4. Handle Stripe Products/Prices dynamically
-    // In a prod app, you might map DB plans to actual Stripe Price IDs.
-    // Since we only have DB pricing, we can dynamically create a Price/Product on the fly
-    // or use adhoc prices. Stripe requires a `price` ID for subscriptions.
-    
-    // Check if we need to create a Stripe Product and Price
-    // For simplicity, we search for an existing product based on the plan ID, or create it.
+    // 4. Check for existing payment to avoid race conditions and duplicates
+    // @ts-ignore
+    const lastPayment = await prisma.payment.findFirst({
+        where: {
+            userId: user.id,
+            planId: plan.id,
+        },
+        orderBy: { createdAt: 'desc' }
+    });
+
+    if (lastPayment) {
+        if (lastPayment.status === 'PAID') {
+            throw new ApiError(httpStatus.BAD_REQUEST, "You already have an active subscription for this plan.");
+        }
+        
+        if (lastPayment.status === 'PENDING' && lastPayment.transactionId) {
+            try {
+                const paymentIntent = await stripe.paymentIntents.retrieve(lastPayment.transactionId);
+                if (['requires_payment_method', 'requires_confirmation', 'requires_action'].includes(paymentIntent.status)) {
+                    const invoiceId = paymentIntent.invoice as string;
+                    if (invoiceId) {
+                        const invoice = await stripe.invoices.retrieve(invoiceId);
+                        const subscriptionId = invoice.subscription as string;
+                        return { 
+                            subscriptionId, 
+                            clientSecret: paymentIntent.client_secret,
+                            orderId: lastPayment.id
+                        };
+                    }
+                }
+            } catch (error) {
+                console.error("Existing session invalid or expired:", error);
+            }
+        }
+    }
+
+    // 5. Handle Stripe Products/Prices dynamically
+    // ... logic to find/create Price ID ...
     let stripePriceId: string;
-    
-    // We use Stripe's metadata to link Stripe Prices with our DB Plans
     const prices = await stripe.prices.list({
         lookup_keys: [`plan_${plan.id}`],
         limit: 1
@@ -75,31 +110,29 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
     if (prices.data.length > 0) {
         stripePriceId = prices.data[0].id;
     } else {
-        // Create Product
         const product = await stripe.products.create({
             name: plan.name,
-            description: plan.features.join(', ').substring(0, 250), // Truncate if too long
+            description: plan.features.join(', ').substring(0, 250),
             metadata: { planId: plan.id }
         });
         
-        // Create Price
         const price = await stripe.prices.create({
             product: product.id,
-            unit_amount: Math.round(plan.price * 100), // Stripe expects cents
+            unit_amount: Math.round(plan.price * 100),
             currency: plan.currency.toLowerCase(),
             recurring: {
                 interval: plan.duration === 'yearly' ? 'year' : 'month',
             },
             lookup_key: `plan_${plan.id}`
         });
-
         stripePriceId = price.id;
     }
 
-    // 5. Create Subscription with state: incomplete
+    // 6. Create NEW Subscription
     const subscription = await stripe.subscriptions.create({
         customer: customerId,
         items: [{ price: stripePriceId }],
+        description: `Subscription for ${plan.name} - Plan ID: ${plan.id} - User: ${user.email}`,
         payment_behavior: 'default_incomplete',
         payment_settings: { save_default_payment_method: 'on_subscription' },
         expand: ['latest_invoice.payment_intent'],
@@ -109,7 +142,6 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         }
     });
 
-    // Extract client secret
     const invoice = subscription.latest_invoice as Stripe.Invoice;
     const paymentIntent = invoice.payment_intent as Stripe.PaymentIntent;
 
@@ -117,17 +149,32 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         throw new ApiError(500, 'Failed to generate payment intent');
     }
 
-    // 6. Record Payment in DB as PENDING
-    // @ts-ignore
-    const paymentRecord = await prisma.payment.create({
-        data: {
-            userId: user.id,
-            planId: plan.id,
-            amount: plan.price,
-            status: 'PENDING',
-            transactionId: paymentIntent.id
-        }
-    });
+    // 7. Update EXISTING or Create NEW Payment record
+    let paymentRecord;
+    if (lastPayment) {
+        // @ts-ignore
+        paymentRecord = await prisma.payment.update({
+            where: { id: lastPayment.id },
+            data: {
+                transactionId: paymentIntent.id,
+                invoiceId: invoice.id,
+                amount: plan.price,
+                updatedAt: new Date()
+            }
+        });
+    } else {
+        // @ts-ignore
+        paymentRecord = await prisma.payment.create({
+            data: {
+                userId: user.id,
+                planId: plan.id,
+                amount: plan.price,
+                status: 'PENDING',
+                transactionId: paymentIntent.id,
+                invoiceId: invoice.id
+            }
+        });
+    }
 
     return { 
         subscriptionId: subscription.id, 
@@ -168,7 +215,10 @@ const handleWebhook = async (payload: string, sig: string) => {
                     // @ts-ignore
                     await prisma.payment.updateMany({
                         where: { transactionId: paymentIntentId },
-                        data: { status: 'PAID' }
+                        data: { 
+                            status: 'PAID',
+                            invoiceId: invoice.id 
+                        }
                     });
                 }
 
