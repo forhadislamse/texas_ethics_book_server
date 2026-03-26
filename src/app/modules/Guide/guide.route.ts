@@ -13,17 +13,17 @@ const router = express.Router();
 // Keep this open so they can see titles, but detail view is locked
 router.get('/chapters', auth(UserRole.USER, UserRole.ADMIN), GuideController.getAllChapters);
 
-// Get a single chapter with its sections (requires subscription)
-router.get('/chapters/:id', auth(UserRole.USER, UserRole.ADMIN), checkSubscription, GuideController.getChapterById);
+// Get a single chapter with its sections (requires subscription check in service)
+router.get('/chapters/:id', auth(UserRole.USER, UserRole.ADMIN), GuideController.getChapterById);
 
-// Get all sections (paginated) (requires subscription)
-router.get('/sections', auth(UserRole.USER, UserRole.ADMIN), checkSubscription, GuideController.getAllSections);
+// Get all sections (paginated) (requires subscription check in service)
+router.get('/sections', auth(UserRole.USER, UserRole.ADMIN), GuideController.getAllSections);
 
-// Get a single section (requires subscription)
-router.get('/sections/:id', auth(UserRole.USER, UserRole.ADMIN), checkSubscription, GuideController.getSectionById);
+// Get a single section (requires subscription check in service)
+router.get('/sections/:id', auth(UserRole.USER, UserRole.ADMIN), GuideController.getSectionById);
 
-// Search guide (requires subscription)
-router.get('/search', auth(UserRole.USER, UserRole.ADMIN), checkSubscription, GuideController.searchGuide);
+// Search guide (requires subscription check in service)
+router.get('/search', auth(UserRole.USER, UserRole.ADMIN), GuideController.searchGuide);
 
 // ─────────────── Admin-Only Routes ───────────────
 

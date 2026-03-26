@@ -8,6 +8,22 @@ const prisma = new PrismaClient();
 
 // ─────────────────────────── READ ────────────────────────────
 
+// Helper to check user subscription status
+const getSubscriptionStatus = async (userId?: string, userRole?: string) => {
+    if (userRole === 'ADMIN') return true;
+    if (!userId) return false;
+
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { isSubscribed: true, subscriptionExpiresAt: true }
+    });
+
+    if (!user) return false;
+
+    const isExpired = user.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
+    return !!user.isSubscribed && !isExpired;
+};
+
 const getAllChapters = async (query: {
     page?: number;
     limit?: number;
@@ -26,15 +42,7 @@ const getAllChapters = async (query: {
     });
 
     // Get user subscription status
-    let isSubscribed = userRole === 'ADMIN';
-    if (!isSubscribed && userId) {
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { isSubscribed: true, subscriptionExpiresAt: true }
-        });
-        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
-        isSubscribed = !!user?.isSubscribed && !isExpired;
-    }
+    const isSubscribed = await getSubscriptionStatus(userId, userRole);
 
     const where: any = {};
 
@@ -77,10 +85,17 @@ const getAllChapters = async (query: {
 
     const total = await prisma.chapter.count({ where });
 
-    const data = chapters.map(ch => ({
-        ...ch,
-        isLocked: ch.order > 1 && !isSubscribed
-    }));
+    const data = chapters.map(ch => {
+        const isChapterLocked = ch.order > 1 && !isSubscribed;
+        return {
+            ...ch,
+            isLocked: isChapterLocked,
+            sections: ch.sections.map(sec => ({
+                ...sec,
+                isLocked: isChapterLocked
+            }))
+        };
+    });
 
     return {
         data,
@@ -111,24 +126,27 @@ const getChapterById = async (id: string, userId?: string, userRole?: string) =>
 
     if (!chapter) throw new ApiError(404, 'Chapter not found');
 
+    // Get user subscription status for lock calculation
+    const isSubscribed = await getSubscriptionStatus(userId, userRole);
+
+    const isChapterLocked = chapter.order > 1 && !isSubscribed;
+
     // Access control: Only first chapter (order 1) is free. Admins have full access.
-    if (chapter.order > 1 && userRole !== 'ADMIN') {
+    if (isChapterLocked && userRole !== 'ADMIN') {
         if (!userId) {
             throw new ApiError(401, 'Please login to access this chapter');
         }
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { isSubscribed: true, subscriptionExpiresAt: true }
-        });
-
-        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
-        if (!user?.isSubscribed || isExpired) {
-            throw new ApiError(403, 'Subscription required to access this chapter');
-        }
+        throw new ApiError(403, 'Subscription required to access this chapter');
     }
 
-    return chapter;
+    return {
+        ...chapter,
+        isLocked: isChapterLocked,
+        sections: chapter.sections.map(sec => ({
+            ...sec,
+            isLocked: isChapterLocked
+        }))
+    };
 };
 
 const getSectionById = async (id: string, userId?: string, userRole?: string) => {
@@ -153,24 +171,22 @@ const getSectionById = async (id: string, userId?: string, userRole?: string) =>
 
     if (!section) throw new ApiError(404, 'Section not found');
 
+    // Get user subscription status for lock calculation
+    const isSubscribed = await getSubscriptionStatus(userId, userRole);
+    const isLocked = section.chapter.order > 1 && !isSubscribed;
+
     // Access control: Only sections in the first chapter (order 1) are free. Admins have full access.
-    if (section.chapter.order > 1 && userRole !== 'ADMIN') {
+    if (isLocked && userRole !== 'ADMIN') {
         if (!userId) {
             throw new ApiError(401, 'Please login to access this section');
         }
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { isSubscribed: true, subscriptionExpiresAt: true }
-        });
-
-        const isExpired = user?.subscriptionExpiresAt && new Date() > user.subscriptionExpiresAt;
-        if (!user?.isSubscribed || isExpired) {
-            throw new ApiError(403, 'Subscription required to access this section');
-        }
+        throw new ApiError(403, 'Subscription required to access this section');
     }
 
-    return section;
+    return {
+        ...section,
+        isLocked
+    };
 };
 
 const getAllSections = async (query: {
