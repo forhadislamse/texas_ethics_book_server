@@ -63,37 +63,7 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         });
     }
 
-    // 4. Check for existing payment to avoid race conditions and duplicates
-    // @ts-ignore
-    const lastPayment = await prisma.payment.findFirst({
-        where: {
-            userId: user.id,
-            planId: plan.id,
-        },
-        orderBy: { createdAt: 'desc' }
-    });
 
-    if (lastPayment) {
-        if (lastPayment.status === 'PENDING' && lastPayment.transactionId) {
-            try {
-                const paymentIntent = await stripe.paymentIntents.retrieve(lastPayment.transactionId);
-                if (['requires_payment_method', 'requires_confirmation', 'requires_action'].includes(paymentIntent.status)) {
-                    const invoiceId = paymentIntent.invoice as string;
-                    if (invoiceId) {
-                        const invoice = await stripe.invoices.retrieve(invoiceId);
-                        const subscriptionId = invoice.subscription as string;
-                        return { 
-                            subscriptionId, 
-                            clientSecret: paymentIntent.client_secret,
-                            orderId: lastPayment.id
-                        };
-                    }
-                }
-            } catch (error) {
-                console.error("Existing session invalid or expired:", error);
-            }
-        }
-    }
 
     // 5. Handle Stripe Products/Prices dynamically
     // ... logic to find/create Price ID ...
@@ -145,32 +115,18 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         throw new ApiError(500, 'Failed to generate payment intent');
     }
 
-    // 7. Update EXISTING or Create NEW Payment record
-    let paymentRecord;
-    if (lastPayment) {
-        // @ts-ignore
-        paymentRecord = await prisma.payment.update({
-            where: { id: lastPayment.id },
-            data: {
-                transactionId: paymentIntent.id,
-                invoiceId: invoice.id,
-                amount: plan.price,
-                updatedAt: new Date()
-            }
-        });
-    } else {
-        // @ts-ignore
-        paymentRecord = await prisma.payment.create({
-            data: {
-                userId: user.id,
-                planId: plan.id,
-                amount: plan.price,
-                status: 'PENDING',
-                transactionId: paymentIntent.id,
-                invoiceId: invoice.id
-            }
-        });
-    }
+    // 7. Create NEW Payment record in DB for history tracking
+    // @ts-ignore
+    const paymentRecord = await prisma.payment.create({
+        data: {
+            userId: user.id,
+            planId: plan.id,
+            amount: plan.price,
+            status: 'PENDING',
+            transactionId: paymentIntent.id,
+            invoiceId: invoice.id
+        }
+    });
 
     return { 
         subscriptionId: subscription.id, 
