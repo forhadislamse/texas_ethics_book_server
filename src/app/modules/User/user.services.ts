@@ -82,7 +82,7 @@ const updateUserProfile = async (
     },
   });
 
-   // ---------------------------------------------------
+  // ---------------------------------------------------
   // 🚀 SEND PROFILE UPDATE NOTIFICATION
   // ---------------------------------------------------
   const notificationPayload = {
@@ -174,7 +174,7 @@ const toggleUserOnlineStatus = async (
       isUserOnline,
     },
     select: {
-       id: true,
+      id: true,
       fullName: true,
       email: true,
       profileImage: true,
@@ -217,7 +217,7 @@ const toggleNotificationOnOff = async (
       isNotificationOn,
     },
     select: {
-     id: true,
+      id: true,
       fullName: true,
       email: true,
       profileImage: true,
