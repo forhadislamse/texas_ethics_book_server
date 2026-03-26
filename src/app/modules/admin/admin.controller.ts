@@ -41,8 +41,26 @@ const getDashboardStats = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getSubscriptionAnalytics = catchAsync(async (req: Request, res: Response) => {
+    const query = req.query;
+    const result = await AdminService.getSubscriptionAnalytics(query as any);
+    
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: 'Subscription analytics fetched successfully',
+        data: {
+          activeSubscriptionCount: result.activeSubscriptionCount,
+          annualRevenueTotal: result.annualRevenueTotal,
+          data: result.data
+        },
+        meta: result.meta
+    });
+});
+
 export const AdminController = {
     getAllPaidTransactions,
     getAllUsers,
-    getDashboardStats
+    getDashboardStats,
+    getSubscriptionAnalytics
 };

@@ -23,4 +23,10 @@ router.get(
   AdminController.getDashboardStats
 );
 
+router.get(
+  '/subscriptions',
+  auth(UserRole.ADMIN),
+  AdminController.getSubscriptionAnalytics
+);
+
 export const AdminRoutes = router;

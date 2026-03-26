@@ -204,8 +204,82 @@ const getDashboardStats = async () => {
     };
 };
 
+const getSubscriptionAnalytics = async (query: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: string;
+}) => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const startOfYear = new Date(currentYear, 0, 1);
+
+    // 1. Global Metrics
+    const activeSubscriptionCount = await prisma.user.count({ 
+        where: { 
+            isSubscribed: true, 
+            subscriptionExpiresAt: { gt: now } 
+        } 
+    });
+
+    const annualRevenueData = await prisma.payment.aggregate({
+        where: {
+            status: PaymentStatus.PAID,
+            createdAt: { gte: startOfYear }
+        },
+        _sum: { amount: true }
+    });
+
+    // 2. Paginated Subscription List (PAID only)
+    const { page, limit, skip, sortBy, sortOrder } = paginationHelper.calculatePagination({
+        ...query,
+        limit: query.limit ? Number(query.limit) : 5
+    });
+
+    const where = { status: PaymentStatus.PAID };
+
+    const subscriptions = await prisma.payment.findMany({
+        where,
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    fullName: true,
+                    email: true,
+                    profileImage: true
+                }
+            },
+            plan: {
+                select: {
+                    id: true,
+                    name: true,
+                    price: true,
+                    currency: true
+                }
+            }
+        },
+        orderBy: { [sortBy]: sortOrder },
+        skip,
+        take: limit
+    });
+
+    const total = await prisma.payment.count({ where });
+
+    return {
+        activeSubscriptionCount,
+        annualRevenueTotal: annualRevenueData._sum.amount || 0,
+        data: subscriptions,
+        meta: {
+            total,
+            page,
+            limit
+        }
+    };
+};
+
 export const AdminService = {
     getAllPaidTransactions,
     getAllUsersWithPayments,
-    getDashboardStats
+    getDashboardStats,
+    getSubscriptionAnalytics
 };
