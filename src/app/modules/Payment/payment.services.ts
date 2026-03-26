@@ -74,10 +74,6 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
     });
 
     if (lastPayment) {
-        if (lastPayment.status === 'PAID') {
-            throw new ApiError(httpStatus.BAD_REQUEST, "You already have an active subscription for this plan.");
-        }
-        
         if (lastPayment.status === 'PENDING' && lastPayment.transactionId) {
             try {
                 const paymentIntent = await stripe.paymentIntents.retrieve(lastPayment.transactionId);

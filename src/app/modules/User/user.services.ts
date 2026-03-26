@@ -30,6 +30,19 @@ const getMyProfile = async (userToken: string) => {
   if (!userProfile) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found");
   }
+
+  // Check and update subscription status if expired
+  const now = new Date();
+  if (userProfile.isSubscribed && userProfile.subscriptionExpiresAt && userProfile.subscriptionExpiresAt < now) {
+    // Update DB for consistency
+    await prisma.user.update({
+      where: { id: userProfile.id },
+      data: { isSubscribed: false }
+    });
+    // Update local object for response
+    userProfile.isSubscribed = false;
+  }
+
   const userWithoutPassword = omit(userProfile, ["password"]);
 
   return userWithoutPassword;
