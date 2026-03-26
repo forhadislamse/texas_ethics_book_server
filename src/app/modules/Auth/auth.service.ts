@@ -128,7 +128,15 @@ const loginUser = async (payload: {
     config.jwt.refresh_token_expires_in!
   );
 
-  return { token, refreshToken, role: userData.role ,id: userData.id, email: userData.email};
+  return { 
+    token, 
+    refreshToken, 
+    role: userData.role, 
+    id: userData.id, 
+    email: userData.email,
+    fullName: userData.fullName,
+    profileImage: userData.profileImage,
+  };
 };
 
 
