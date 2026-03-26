@@ -22,6 +22,9 @@ const getMyProfile = async (userToken: string) => {
     where: {
       id: decodedToken.id,
     },
+    include: {
+      plan: true,
+    },
   });
 
   if (!userProfile) {
