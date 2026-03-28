@@ -1,32 +1,42 @@
-# Walkthrough - Full PDF Digitization Complete
+# Enhanced Guide Search Functionality Walkthrough
 
-I have successfully digitized the entire PDF document into your database. The issue where only 19 chapters were being imported has been resolved, and the system now captures all chapters, including the "Rules" sections.
+I have successfully updated the search functionality to be more comprehensive and user-friendly, as requested.
 
 ## Changes Made
 
-### 1. Enhanced Parsing Logic
-I updated [parse-text.ts](file:///c:/Users/Muhammad%20Forhad/andcates_server/src/scripts/parse-text.ts) to:
-- Recognize "Rules" section headers (using `§` symbol).
-- Skip multiple Table of Contents pages found throughout the document.
-- Handle multi-line titles for chapters and sections more robustly.
-- Filter out header/footer noise and page numbers.
+### Parameter Renaming (searchTerm)
+*   **Renamed Search Parameter**: Changed the search query parameter from `q` to `searchTerm` across the entire application (Backend Interface, Backend Service, Frontend Redux API, and Frontend Search Page) for better clarity and consistency.
 
-### 2. Complete Data Import
-I updated [import-data.ts](file:///c:/Users/Muhammad%20Forhad/andcates_server/src/scripts/import-data.ts) to use the new parsed structure, resulting in a much larger and more accurate dataset.
+### Backend (andcates_server)
+*   **Expanded Search Criteria**: The `searchGuide` service in `guide.services.ts` now searches across the following fields:
+    *   **Section**: Number, Title, Content, Practice Notes, and Sub-chapter.
+    *   **Chapter**: Number and Title (allowing users to find sections by searching for a chapter's name or number).
+    *   **Annotations/Rules**: Internal references (popup titles, excerpts, link text) and External references (link text).
+*   **Insensitive Search**: All searches are case-insensitive and match anywhere within the text.
 
-## Results & Verification
+### Frontend (andcates_frontend)
+*   **Search Result Highlighting**: Implemented a `highlightText` utility in the search results page.
+    *   Matches for the search term are now highlighted with a subtle blue background (`bg-blue-100`) to help users quickly identify why a result was returned.
+    *   Highlighting is applied to Section numbers, Section titles, snippets of content, and Chapter information.
+*   **Improved Clarity**: Result cards now clearly show the "Chapter — Title" context at the bottom of each card.
 
-The database now contains the full range of legal documents from the PDF:
+## Results
 
-- **Total Chapters**: 36 (Previously only 19)
-- **Total Sections**: 837 (Full coverage of Laws and Rules)
-- **References**: All Internal and External references have been extracted and mapped to their respective sections.
+The search is now much more powerful and correctly uses the `searchTerm` parameter. For example:
+- Searching for `556` will return all sections in Chapter 556.
+- Searching for a specific rule name like `Education Code` (if mentioned in internal refs) will now surface the relevant sections.
+- Searching for a section number like `556.001` will find it directly.
 
-### Data Sample (Backend)
-I verified a sample of the "Rules" section:
-- **Chapter 6**: ORGANIZATION AND ADMINISTRATION
-- **Section 6.1**: DEFINITIONS
-- **Content**: Successfully captured and stored.
+## Verification
+
+- [x] Backend search logic verified for Section number, Chapter number, and Title.
+- [x] Parameter rename (`q` -> `searchTerm`) verified across the stack.
+- [x] Backend search logic verified for Internal/External references.
+- [x] Frontend search results page updated with highlighting and context.
+- [x] Navigation from search results to specific sections verified.
+
+> [!TIP]
+> Use `searchTerm` instead of `q` when testing the API manually (e.g., in Postman).
 
 ## Next Steps for Wikipedia Documentation
 The backend is now "perfectly aligned" to support a sidebar-based interface:

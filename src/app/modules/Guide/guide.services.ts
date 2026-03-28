@@ -287,18 +287,45 @@ const getAllSections = async (query: {
 };
 
 const searchGuide = async (query: IGuideSearchQuery) => {
-    const { q, page = 1, limit = 10 } = query;
+    const { searchTerm, page = 1, limit = 10 } = query;
     const skip = (Number(page) - 1) * Number(limit);
 
-    if (!q) return { data: [], total: 0 };
+    if (!searchTerm) return { data: [], total: 0 };
 
     const sections = await prisma.section.findMany({
         where: {
             OR: [
-                { title: { contains: q, mode: 'insensitive' } },
-                { content: { contains: q, mode: 'insensitive' } },
-                { practiceNotes: { contains: q, mode: 'insensitive' } },
-                { subChapter: { contains: q, mode: 'insensitive' } }
+                { number: { contains: searchTerm, mode: 'insensitive' } },
+                { title: { contains: searchTerm, mode: 'insensitive' } },
+                { content: { contains: searchTerm, mode: 'insensitive' } },
+                { practiceNotes: { contains: searchTerm, mode: 'insensitive' } },
+                { subChapter: { contains: searchTerm, mode: 'insensitive' } },
+                {
+                    chapter: {
+                        OR: [
+                            { number: { contains: searchTerm, mode: 'insensitive' } },
+                            { title: { contains: searchTerm, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    internalRefs: {
+                        some: {
+                            OR: [
+                                { linkText: { contains: searchTerm, mode: 'insensitive' } },
+                                { popupTitle: { contains: searchTerm, mode: 'insensitive' } },
+                                { popupExcerpt: { contains: searchTerm, mode: 'insensitive' } }
+                            ]
+                        }
+                    }
+                },
+                {
+                    externalRefs: {
+                        some: {
+                            linkText: { contains: searchTerm, mode: 'insensitive' }
+                        }
+                    }
+                }
             ]
         },
         include: {
@@ -322,10 +349,37 @@ const searchGuide = async (query: IGuideSearchQuery) => {
     const total = await prisma.section.count({
         where: {
             OR: [
-                { title: { contains: q, mode: 'insensitive' } },
-                { content: { contains: q, mode: 'insensitive' } },
-                { practiceNotes: { contains: q, mode: 'insensitive' } },
-                { subChapter: { contains: q, mode: 'insensitive' } }
+                { number: { contains: searchTerm, mode: 'insensitive' } },
+                { title: { contains: searchTerm, mode: 'insensitive' } },
+                { content: { contains: searchTerm, mode: 'insensitive' } },
+                { practiceNotes: { contains: searchTerm, mode: 'insensitive' } },
+                { subChapter: { contains: searchTerm, mode: 'insensitive' } },
+                {
+                    chapter: {
+                        OR: [
+                            { number: { contains: searchTerm, mode: 'insensitive' } },
+                            { title: { contains: searchTerm, mode: 'insensitive' } }
+                        ]
+                    }
+                },
+                {
+                    internalRefs: {
+                        some: {
+                            OR: [
+                                { linkText: { contains: searchTerm, mode: 'insensitive' } },
+                                { popupTitle: { contains: searchTerm, mode: 'insensitive' } },
+                                { popupExcerpt: { contains: searchTerm, mode: 'insensitive' } }
+                            ]
+                        }
+                    }
+                },
+                {
+                    externalRefs: {
+                        some: {
+                            linkText: { contains: searchTerm, mode: 'insensitive' }
+                        }
+                    }
+                }
             ]
         }
     });

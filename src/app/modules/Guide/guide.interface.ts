@@ -1,6 +1,6 @@
 
 export interface IGuideSearchQuery {
-    q?: string;
+    searchTerm?: string;
     page?: number;
     limit?: number;
 }
