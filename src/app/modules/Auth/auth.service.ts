@@ -6,9 +6,8 @@ import ApiError from "../../../errors/ApiErrors";
 import crypto from "crypto";
 import httpStatus from "http-status";
 import { generateOtp } from "../../../helpars/generateOtp";
-import emailSender from "../../../shared/brevoMailSender";
+import emailSender from "../../../shared/emailSender";
 import prisma from "../../../shared/prisma";
-import { registrationOtpTemplate } from "../../../helpars/template/registrationOtpTemplate";
 import { forgotPasswordTemplate } from "../../../helpars/template/forgotPasswordTemplate";
 import { NotificationType, UserRole } from "@prisma/client";
 import { fileUploader } from "../../../helpars/fileUploader";
@@ -128,11 +127,11 @@ const loginUser = async (payload: {
     config.jwt.refresh_token_expires_in!
   );
 
-  return { 
-    token, 
-    refreshToken, 
-    role: userData.role, 
-    id: userData.id, 
+  return {
+    token,
+    refreshToken,
+    role: userData.role,
+    id: userData.id,
     email: userData.email,
     fullName: userData.fullName,
     profileImage: userData.profileImage,
@@ -185,22 +184,27 @@ const changePassword = async (
 // forgot password
 const forgotPassword = async (payload: { email: string }) => {
   // Fetch user data or throw if not found
-  const userData = await prisma.user.findFirstOrThrow({
+  const userData = await prisma.user.findUnique({
     where: {
       email: payload.email,
     },
   });
 
+  if (!userData) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User not found with this email!");
+  }
+
   const otp = generateOtp(4);
-  const otpExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   console.log(payload.email);
 
   try {
-    const html = forgotPasswordTemplate(otp);
+    // const html = forgotPasswordTemplate(otp);
+    const html = `Here is your OTP code: ${otp}. It will expire in 5 minutes.`;
 
     if (userData.email) {
-      await emailSender(userData.email, html, "Forgot Password OTP");
+      await emailSender(userData.email, html, "Andcates Password OTP");
     }
   } catch (error) {
     console.error(`Failed to send OTP email:`, error);
@@ -311,9 +315,9 @@ const verifyEmailOtp = async (payload: {
   await prisma.user.update({
     where: { email: payload.email },
     data: {
-      isVerifyEmail: true,        
-      otp: null,                  
-      otpExpiresAt: null,         
+      isVerifyEmail: true,
+      otp: null,
+      otpExpiresAt: null,
     },
     select: {
       id: true,
@@ -324,7 +328,7 @@ const verifyEmailOtp = async (payload: {
     }
   });
 
-  return ;
+  return;
 };
 
 // reset password
@@ -351,7 +355,7 @@ const resetPassword = async (payload: { password: string; email: string }) => {
     },
   });
 
-   // Notification payload
+  // Notification payload
   const notificationPayload = {
     title: "Password Reset Successful",
     body: "Your password has been reset successfully. You can now login with your new password.",
