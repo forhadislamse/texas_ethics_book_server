@@ -1,0 +1,16 @@
+{
+  "monthly": [
+    {
+      "id": "price_1TEoYLRRAPLzw12LnCHiigW9",
+      "active": false,
+      "amount": 89900
+    }
+  ],
+  "yearly": [
+    {
+      "id": "price_1TIn3gRRAPLzw12LL5PUDdCd",
+      "active": true,
+      "amount": 19999
+    }
+  ]
+}
