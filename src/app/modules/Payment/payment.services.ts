@@ -68,8 +68,11 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
     // 5. Handle Stripe Products/Prices dynamically
     // ... logic to find/create Price ID ...
     let stripePriceId: string;
+    // cents ব্যবহার করি কারণ Stripe lookup_key-এ dot (.) allow করে না
+    const lookupKey = `plan_${plan.id}_${Math.round(plan.price * 100)}`;
     const prices = await stripe.prices.list({
-        lookup_keys: [`plan_${plan.id}_${plan.price}`],
+        lookup_keys: [lookupKey],
+        active: true,  // শুধু active price নাও — inactive price দিলে Stripe error দেয়
         limit: 1
     });
 
@@ -89,7 +92,8 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
             recurring: {
                 interval: plan.duration === 'yearly' ? 'year' : 'month',
             },
-            lookup_key: `plan_${plan.id}_${plan.price}`
+            lookup_key: lookupKey,
+            transfer_lookup_key: true  // পুরানো archived price থেকে key নিয়ে নেবে
         });
         stripePriceId = price.id;
     }
