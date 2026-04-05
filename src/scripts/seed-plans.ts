@@ -26,7 +26,7 @@ async function seedPlans() {
       },
       {
         name: 'Monthly Plan',
-        price: 899,
+        price: 19.99,
         currency: 'USD',
         duration: 'monthly',
         isPopular: true,
@@ -41,7 +41,7 @@ async function seedPlans() {
       },
       {
         name: 'Yearly Plan',
-        price: 2499,
+        price: 199.99,
         currency: 'USD',
         duration: 'yearly',
         isPopular: false,

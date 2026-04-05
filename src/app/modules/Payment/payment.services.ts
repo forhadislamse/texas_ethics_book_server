@@ -69,7 +69,7 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
     // ... logic to find/create Price ID ...
     let stripePriceId: string;
     const prices = await stripe.prices.list({
-        lookup_keys: [`plan_${plan.id}`],
+        lookup_keys: [`plan_${plan.id}_${plan.price}`],
         limit: 1
     });
 
@@ -89,7 +89,7 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
             recurring: {
                 interval: plan.duration === 'yearly' ? 'year' : 'month',
             },
-            lookup_key: `plan_${plan.id}`
+            lookup_key: `plan_${plan.id}_${plan.price}`
         });
         stripePriceId = price.id;
     }
