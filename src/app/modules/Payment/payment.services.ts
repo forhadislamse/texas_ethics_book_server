@@ -204,7 +204,7 @@ const handleWebhook = async (payload: string, sig: string) => {
         case 'customer.subscription.deleted':
             const subDeleted = event.data.object as Stripe.Subscription;
             const customerId = subDeleted.customer as string;
-
+ 
             const userToUnsub = await prisma.user.findFirst({
                 where: { stripeCustomerId: customerId }
             });
