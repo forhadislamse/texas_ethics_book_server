@@ -3,6 +3,7 @@ import config from '../../../config';
 import prisma from '../../../shared/prisma';
 import ApiError from '../../../errors/ApiErrors';
 import httpStatus from 'http-status';
+import { PaymentStatus } from '@prisma/client';
 
 const stripe = new Stripe(config.stripe.secret_key as string, {
     apiVersion: '2024-06-20' as any,
@@ -130,13 +131,12 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
     }
 
     // 7. Create NEW Payment record in DB for history tracking
-    // @ts-ignore
     const paymentRecord = await prisma.payment.create({
         data: {
             userId: user.id,
             planId: plan.id,
             amount: plan.price,
-            status: 'PENDING',
+            status: PaymentStatus.PENDING,
             transactionId: paymentIntent.id,
             invoiceId: invoice.id
         }
@@ -178,18 +178,21 @@ const handleWebhook = async (payload: string, sig: string) => {
 
                 // Update Payment Status
                 if (paymentIntentId) {
-                    // @ts-ignore
                     await prisma.payment.updateMany({
                         where: { transactionId: paymentIntentId },
                         data: {
-                            status: 'PAID',
+                            status: PaymentStatus.PAID,
                             invoiceId: invoice.id
                         }
                     });
                 }
 
-                // Update User Subscription
-                // @ts-ignore
+                // Ensure metadata contains required fields
+                if (!userId || !planId) {
+                    throw new ApiError(httpStatus.BAD_REQUEST, "Incomplete subscription metadata from Stripe");
+                }
+
+                // Update User Subscription 
                 await prisma.user.update({
                     where: { id: userId },
                     data: {
@@ -236,7 +239,6 @@ const confirmPayment = async (paymentId: string, paymentIntentId: string) => {
     }
 
     // 2. Fetch the Payment record from our DB
-    // @ts-ignore
     const payment = await prisma.payment.findUnique({
         where: { id: paymentId },
         include: { plan: true }
@@ -246,15 +248,18 @@ const confirmPayment = async (paymentId: string, paymentIntentId: string) => {
         throw new ApiError(404, "Payment record not found");
     }
 
+    if (!payment.plan) {
+        throw new ApiError(404, "Plan details not found for this payment record");
+    }
+
     if (payment.status === 'PAID') {
         return { message: "Payment already confirmed", payment };
     }
 
     // 3. Update Payment Status in DB
-    // @ts-ignore
     const updatedPayment = await prisma.payment.update({
         where: { id: paymentId },
-        data: { status: 'PAID' }
+        data: { status: PaymentStatus.PAID }
     });
 
     // 4. Update User Subscription Details
@@ -266,7 +271,10 @@ const confirmPayment = async (paymentId: string, paymentIntentId: string) => {
         expiresAt.setMonth(expiresAt.getMonth() + 1);
     }
 
-    // @ts-ignore
+    if (!payment.userId || !payment.planId) {
+        throw new ApiError(httpStatus.BAD_REQUEST, "Payment record is missing user or plan information");
+    }
+
     await prisma.user.update({
         where: { id: payment.userId },
         data: {
