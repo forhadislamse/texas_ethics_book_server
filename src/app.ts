@@ -7,27 +7,51 @@ import GlobalErrorHandler from "./app/middlewares/globalErrorHandler";
 import router from "./app/routes";
 
 const app: Application = express();
-// export const corsOptions = {
-//   origin: ["http://localhost:3001", "http://localhost:3000", "https://sendiate-dashboard.vercel.app/",],
-//   methods: ["GET", "POST", "PUT", "DELETE"],
-//   allowedHeaders: ["Content-Type", "Authorization"],
-//   credentials: true,
-// };
+// // export const corsOptions = {
+// //   origin: ["http://localhost:3001", "http://localhost:3000", "https://sendiate-dashboard.vercel.app/",],
+// //   methods: ["GET", "POST", "PUT", "DELETE"],
+// //   allowedHeaders: ["Content-Type", "Authorization"],
+// //   credentials: true,
+// // };
+
+// // Middleware setup
+// app.use(cors());
+// app.use(cookieParser());
+
+// // Special handling for Stripe Webhook to get raw body
+// app.use(
+//   express.json({
+//     verify: (req: any, res, buf) => {
+//       if (req.originalUrl.includes("/webhook")) {
+//         req.rawBody = buf;
+//       }
+//     },
+//   })
+// );
+// app.use(express.urlencoded({ extended: true }));
+// app.use(express.static("public"));
+
+// // Route handler for root endpoint
+// app.get("/", (req: Request, res: Response) => {
+//   res.send({
+//     success: true,
+//     statusCode: httpStatus.OK,
+//     message: "The server is running!",
+//   });
+// });
+
+export const corsOptions = {
+  origin: true, // Allow all origins for now to prevent CORS issues with Vercel frontend
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
+  credentials: true,
+};
 
 // Middleware setup
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(cookieParser());
 
-// Special handling for Stripe Webhook to get raw body
-app.use(
-  express.json({
-    verify: (req: any, res, buf) => {
-      if (req.originalUrl.includes("/webhook")) {
-        req.rawBody = buf;
-      }
-    },
-  })
-);
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
