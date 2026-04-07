@@ -60,8 +60,9 @@ const GlobalErrorHandler = (
   // Prisma Client Unknown Request Error
   else if (err instanceof Prisma.PrismaClientUnknownRequestError) {
     statusCode = httpStatus.INTERNAL_SERVER_ERROR;
-    message = "An unknown error occurred while processing the request.";
+    message = "An unknown error occurred while processing the request. This may be due to missing data (orphaned records) or invalid query parameters.";
     errorSources.push("Prisma Client Unknown Request Error");
+    console.error("Prisma Unknown Request Error Detail:", err.message);
   }
   // Generic Error Handling (e.g., JavaScript Errors)
   else if (err instanceof SyntaxError) {

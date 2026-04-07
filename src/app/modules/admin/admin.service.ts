@@ -15,6 +15,10 @@ const getAllPaidTransactions = async (query: {
 
     const where = { status: PaymentStatus.PAID };
 
+    // Validate sortBy field for Payment model
+    const validSortFields = ['createdAt', 'amount', 'status', 'transactionId', 'updatedAt'];
+    const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     const payments = await prisma.payment.findMany({
         where,
         include: {
@@ -35,7 +39,7 @@ const getAllPaidTransactions = async (query: {
                 }
             }
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [finalSortBy]: sortOrder },
         skip,
         take: limit
     });
@@ -69,6 +73,10 @@ const getAllUsersWithPayments = async (query: {
         role: { not: 'ADMIN' }
     };
 
+    // Validate sortBy field for User model
+    const validSortFields = ['fullName', 'email', 'createdAt', 'status', 'phone'];
+    const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     if (searchTerm) {
         where.OR = [
             { fullName: { contains: searchTerm, mode: 'insensitive' } },
@@ -88,7 +96,7 @@ const getAllUsersWithPayments = async (query: {
                 }
             }
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [finalSortBy]: sortOrder },
         skip,
         take: limit
     });
@@ -197,8 +205,8 @@ const getDashboardStats = async () => {
     return {
         totalUsers,
         activeSubscriptions,
-        monthlyRevenue: monthlyRevenueData._sum.amount || 0,
-        annualRevenue: annualRevenueData._sum.amount || 0,
+        monthlyRevenue: monthlyRevenueData?._sum?.amount || 0,
+        annualRevenue: annualRevenueData?._sum?.amount || 0,
         annualRevenueChart,
         recentSubscriptions
     };
@@ -238,6 +246,10 @@ const getSubscriptionAnalytics = async (query: {
 
     const where = { status: PaymentStatus.PAID };
 
+    // Validate sortBy field for Payment model
+    const validSortFields = ['createdAt', 'amount', 'status', 'transactionId', 'updatedAt'];
+    const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+
     const subscriptions = await prisma.payment.findMany({
         where,
         include: {
@@ -258,7 +270,7 @@ const getSubscriptionAnalytics = async (query: {
                 }
             }
         },
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: { [finalSortBy]: sortOrder },
         skip,
         take: limit
     });
@@ -267,7 +279,7 @@ const getSubscriptionAnalytics = async (query: {
 
     return {
         activeSubscriptionCount,
-        annualRevenueTotal: annualRevenueData._sum.amount || 0,
+        annualRevenueTotal: annualRevenueData?._sum?.amount || 0,
         data: subscriptions,
         meta: {
             total,
