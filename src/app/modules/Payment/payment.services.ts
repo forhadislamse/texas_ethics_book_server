@@ -99,15 +99,8 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
         stripePriceId = price.id;
     }
 
-    // 6. Cancel any existing active Stripe subscriptions (plan change/upgrade case)
-    const existingSubs = await stripe.subscriptions.list({
-        customer: customerId,
-        status: 'active',
-        limit: 10
-    });
-    for (const existingSub of existingSubs.data) {
-        await stripe.subscriptions.cancel(existingSub.id);
-    }
+    // 6. Existing active Stripe subscriptions cleanup will now happen AFTER successful payment confirmation
+    // to avoid service interruption during the checkout process.
 
     // 7. Create NEW Subscription
     const subscription = await stripe.subscriptions.create({
@@ -138,7 +131,8 @@ const createSubscriptionIntent = async (userId: string, planId: string) => {
             amount: plan.price,
             status: PaymentStatus.PENDING,
             transactionId: paymentIntent.id,
-            invoiceId: invoice.id
+            invoiceId: invoice.id,
+            subscriptionId: subscription.id
         }
     });
 
@@ -182,7 +176,8 @@ const handleWebhook = async (payload: string, sig: string) => {
                         where: { transactionId: paymentIntentId },
                         data: {
                             status: PaymentStatus.PAID,
-                            invoiceId: invoice.id
+                            invoiceId: invoice.id,
+                            subscriptionId: subId
                         }
                     });
                 }
@@ -201,6 +196,10 @@ const handleWebhook = async (payload: string, sig: string) => {
                         subscriptionExpiresAt: expiresAt,
                     },
                 });
+
+                // Cleanup: Cancel any other active subscriptions for this customer
+                const customerId = subscription.customer as string;
+                await cancelOtherSubscriptions(customerId, subId);
             }
             break;
 
@@ -213,13 +212,22 @@ const handleWebhook = async (payload: string, sig: string) => {
             });
 
             if (userToUnsub) {
-                await prisma.user.update({
-                    where: { id: userToUnsub.id },
-                    data: {
-                        isSubscribed: false,
-                        subscriptionExpiresAt: null,
-                    },
+                // IMPORTANT: Only deactivate if this is the user's LATEST active subscription.
+                // If they have a newer subscription (from a plan change), we should not unsub them.
+                const latestPayment = await prisma.payment.findFirst({
+                    where: { userId: userToUnsub.id, status: PaymentStatus.PAID },
+                    orderBy: { createdAt: 'desc' }
                 });
+
+                if (!latestPayment || latestPayment.subscriptionId === subDeleted.id) {
+                    await prisma.user.update({
+                        where: { id: userToUnsub.id },
+                        data: {
+                            isSubscribed: false,
+                            subscriptionExpiresAt: null,
+                        },
+                    });
+                }
             }
             break;
 
@@ -284,7 +292,34 @@ const confirmPayment = async (paymentId: string, paymentIntentId: string) => {
         },
     });
 
+    // Cleanup: Cancel any other active subscriptions for this customer
+    if (paymentIntent.customer && payment.subscriptionId) {
+        await cancelOtherSubscriptions(paymentIntent.customer as string, payment.subscriptionId);
+    }
+
     return updatedPayment;
+};
+
+/**
+ * Helper to cancel all active subscriptions except the current one.
+ */
+const cancelOtherSubscriptions = async (customerId: string, activeSubId: string) => {
+    try {
+        const subscriptions = await stripe.subscriptions.list({
+            customer: customerId,
+            status: 'active',
+            limit: 10
+        });
+
+        for (const sub of subscriptions.data) {
+            if (sub.id !== activeSubId) {
+                await stripe.subscriptions.cancel(sub.id);
+                console.log(`Gracefully cancelled old subscription: ${sub.id}`);
+            }
+        }
+    } catch (error) {
+        console.error("Error cleaning up old subscriptions:", error);
+    }
 };
 
 export const PaymentServices = {
