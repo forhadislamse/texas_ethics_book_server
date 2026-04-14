@@ -61,13 +61,13 @@ const createUserIntoDb = async (payload: any) => {
   });
 
   const token = jwtHelpers.generateToken(
-    { id: newUser.id, email: newUser.email, role: newUser.role },
+    { id: newUser.id, email: newUser.email, role: newUser.role, isSubscribed: newUser.isSubscribed },
     config.jwt.jwt_secret!,
     config.jwt.expires_in!
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    { id: newUser.id, role: newUser.role, email: newUser.email },
+    { id: newUser.id, role: newUser.role, email: newUser.email, isSubscribed: newUser.isSubscribed },
     config.jwt.refresh_token_secret!,
     config.jwt.refresh_token_expires_in!
   );
@@ -116,13 +116,13 @@ const loginUser = async (payload: {
   }
 
   const token = jwtHelpers.generateToken(
-    { id: userData.id, role: userData.role, email: userData.email },
+    { id: userData.id, role: userData.role, email: userData.email, isSubscribed: userData.isSubscribed },
     config.jwt.jwt_secret!,
     config.jwt.expires_in!
   );
 
   const refreshToken = jwtHelpers.generateToken(
-    { id: userData.id, role: userData.role, email: userData.email },
+    { id: userData.id, role: userData.role, email: userData.email, isSubscribed: userData.isSubscribed },
     config.jwt.refresh_token_secret!,
     config.jwt.refresh_token_expires_in!
   );
