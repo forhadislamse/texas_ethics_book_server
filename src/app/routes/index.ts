@@ -9,7 +9,7 @@ import { PlanRoutes } from "../modules/Plan/plan.route";
 import { fileUploadRoutes } from "../modules/fileUpload/fileUpload.routes";
 import admin from "../../shared/firebase";
 
-import { NotificationRoutes } from "../modules/Notification/Notification.routes";
+// import { NotificationRoutes } from "../modules/Notification/Notification.routes";
 import { AdminRoutes } from "../modules/admin/admin.routes";
 
 // import { userCategoryInterestRoutes } from "../modules/admin/userCategoryInterest/userCategoryInterest.routes";
@@ -34,10 +34,12 @@ const moduleRoutes = [
     path: "/uploads",
     route: fileUploadRoutes,
   },
+  /*
   {
     path: "/notifications",
     route: NotificationRoutes,
   },
+  */
   {
     path: "/guide",
     route: GuideRoutes,

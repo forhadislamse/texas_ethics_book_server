@@ -1,3 +1,4 @@
+/*
 import prisma from "./prisma";
 import { NotificationType } from "@prisma/client";
 
@@ -33,3 +34,4 @@ export const sendNotification = async (payload: NotificationPayload) => {
 
   return notification;
 };
+*/

@@ -1,7 +1,7 @@
 import prisma from "../../../shared/prisma";
 import ApiError from "../../../errors/ApiErrors";
 import * as bcrypt from "bcrypt";
-import { NotificationType, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import config from "../../../config";
 import httpStatus from "http-status";
 import { jwtHelpers } from "../../../helpers/jwtHelpers";
@@ -9,7 +9,7 @@ import { omit } from "lodash";
 import { IUserFilters } from "./user.interface";
 import { fileUploader } from "../../../helpers/fileUploader";
 import { deleteImageAndFile } from "../../../helpers/fileDelete";
-import { notificationService } from "../Notification/Notification.service";
+// import { notificationService } from "../Notification/Notification.service";
 
 // get user profile
 const getMyProfile = async (userToken: string) => {
@@ -82,6 +82,7 @@ const updateUserProfile = async (
     },
   });
 
+/*
   // ---------------------------------------------------
   // 🚀 SEND PROFILE UPDATE NOTIFICATION
   // ---------------------------------------------------
@@ -110,6 +111,7 @@ const updateUserProfile = async (
   } catch (error) {
     console.error("Failed to send or save profile update notification:", error);
   }
+*/
 
   return { ...updatedUser, password: undefined };
 };

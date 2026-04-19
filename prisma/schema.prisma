@@ -40,12 +40,13 @@ model User {
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
 
-  Notification Notification[]
+  // Notification Notification[]
   Payment      Payment[]
 
   @@map("users")
 }
 
+/*
 model Notification {
   id        String           @id @default(auto()) @map("_id") @db.ObjectId
   userId    String           @db.ObjectId
@@ -65,7 +66,9 @@ model Notification {
   // target    User?            @relation("ReceivedNotifications", fields: [targetId], references: [id], onDelete: Cascade)
   @@map("notifications")
 }
+*/
 
+/*
 enum NotificationType {
   GENERAL
   LOGIN_SUCCESS
@@ -76,6 +79,7 @@ enum NotificationType {
   PASSWORD_RESET
   NEW_CHAT_MESSAGE
 }
+*/
 
 enum UserRole {
   USER

@@ -32,12 +32,14 @@ router.patch(
   UserController.toggleOnlineStatus
 );
 
+/*
 // toggle notification status
 router.patch(
   "/toggle-notification-status",
   auth(),
   UserController.toggleNotificationOnOff
 );
+*/
 
 
 export const userRoutes = router;

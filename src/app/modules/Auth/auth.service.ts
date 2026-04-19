@@ -10,9 +10,9 @@ import { generateOtp } from "../../../helpers/generateOtp";
 import brevoMailSender from "../../../shared/brevoMailSender";
 import prisma from "../../../shared/prisma";
 import { forgotPasswordTemplate } from "../../../helpers/template/forgotPasswordTemplate";
-import { NotificationType, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 import { fileUploader } from "../../../helpers/fileUploader";
-import { notificationService } from "../Notification/Notification.service";
+// import { notificationService } from "../Notification/Notification.service";
 
 
 
@@ -358,6 +358,7 @@ const resetPassword = async (payload: { password: string; email: string }) => {
     },
   });
 
+/*
   // Notification payload
   const notificationPayload = {
     title: "Password Reset Successful",
@@ -380,6 +381,7 @@ const resetPassword = async (payload: { password: string; email: string }) => {
   } catch (error) {
     console.error("Failed to send or save password reset notification:", error);
   }
+*/
 
   return { message: "Password reset successfully" };
 };
