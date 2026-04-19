@@ -1,7 +1,7 @@
 import axios from 'axios';
 import config from "../config";
 
-const emailSender = async (email: string, html: string, subject: string) => {
+const brevoMailSender = async (email: string, html: string, subject: string) => {
   if (!config.brevoMail.api_key) {
     throw new Error('Missing Brevo API key');
   }
@@ -9,9 +9,8 @@ const emailSender = async (email: string, html: string, subject: string) => {
   try {
     const payload = {
       sender: {
-        name: "andcates support",
-        // email: "svetlana.shabdeen@gmail.com"
-        email: "i.rforhad@gmail.com"
+        name: config.brevoMail.sender_name || "Andcates Support",
+        email: config.brevoMail.email || "i.rforhad@gmail.com",
       },
       to: [
         {
@@ -21,9 +20,6 @@ const emailSender = async (email: string, html: string, subject: string) => {
       htmlContent: html,
       subject: subject
     };
-
-    // Log the exact payload being sent
-    // console.log('Sending email with payload:', JSON.stringify(payload, null, 2));
 
     const response = await axios.post('https://api.brevo.com/v3/smtp/email', payload, {
       headers: {
@@ -35,17 +31,14 @@ const emailSender = async (email: string, html: string, subject: string) => {
 
     return response.data;
   } catch (error: any) {
-    // Enhanced error logging
     if (error.response) {
       console.error('Brevo API Error:', {
         status: error.response.status,
         data: error.response.data,
-        headers: error.response.headers,
-        requestPayload: error.config?.data ? JSON.parse(error.config.data) : null
       });
     }
     throw new Error(error.response?.data?.message || 'Failed to send email');
   }
 };
 
-export default emailSender;
+export default brevoMailSender;

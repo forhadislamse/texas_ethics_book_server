@@ -6,7 +6,8 @@ import ApiError from "../../../errors/ApiErrors";
 import crypto from "crypto";
 import httpStatus from "http-status";
 import { generateOtp } from "../../../helpers/generateOtp";
-import emailSender from "../../../shared/emailSender";
+// import emailSender from "../../../shared/emailSender";
+import brevoMailSender from "../../../shared/brevoMailSender";
 import prisma from "../../../shared/prisma";
 import { forgotPasswordTemplate } from "../../../helpers/template/forgotPasswordTemplate";
 import { NotificationType, UserRole } from "@prisma/client";
@@ -204,7 +205,8 @@ const forgotPassword = async (payload: { email: string }) => {
     const html = `Here is your OTP code: ${otp}. It will expire in 5 minutes.`;
 
     if (userData.email) {
-      await emailSender(userData.email, html, "Andcates Password OTP");
+      // await emailSender(userData.email, html, "Andcates Password OTP");
+      await brevoMailSender(userData.email, html, "Andcates Password OTP");
     }
   } catch (error) {
     console.error(`Failed to send OTP email:`, error);
@@ -241,7 +243,8 @@ const resendOtp = async (email: string) => {
     const html = `Here is your new OTP code: ${otp}. It will expire in 5 minutes.`;
 
     if (user.email) {
-      await emailSender(user.email, html, "Resend OTP");
+      // await emailSender(user.email, html, "Resend OTP");
+      await brevoMailSender(user.email, html, "Resend OTP");
     }
   } catch (error) {
     console.error(`Failed to send OTP email:`, error);
