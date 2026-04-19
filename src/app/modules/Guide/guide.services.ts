@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 import { IGuideSearchQuery } from './guide.interface';
 import ApiError from '../../../errors/ApiErrors';
-import { paginationHelper } from '../../../helpars/paginationHelper';
+import { paginationHelper } from '../../../helpers/paginationHelper';
 
 const prisma = new PrismaClient();
 

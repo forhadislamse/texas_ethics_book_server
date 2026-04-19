@@ -1,5 +1,5 @@
 import { PaymentStatus } from "@prisma/client";
-import { paginationHelper } from "../../../helpars/paginationHelper";
+import { paginationHelper } from "../../../helpers/paginationHelper";
 import prisma from "../../../shared/prisma";
 
 const getAllPaidTransactions = async (query: {

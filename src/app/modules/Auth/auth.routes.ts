@@ -3,7 +3,7 @@ import { AuthController } from "./auth.controller";
 import auth from "../../middlewares/auth";
 import { checkBlockedStatus } from "../../middlewares/checkBlock";
 import multer from "multer";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 
 const router = express.Router();
 

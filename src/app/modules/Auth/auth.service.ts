@@ -1,16 +1,16 @@
 import { Secret } from "jsonwebtoken";
 import config from "../../../config";
-import { jwtHelpers } from "../../../helpars/jwtHelpers";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import * as bcrypt from "bcrypt";
 import ApiError from "../../../errors/ApiErrors";
 import crypto from "crypto";
 import httpStatus from "http-status";
-import { generateOtp } from "../../../helpars/generateOtp";
+import { generateOtp } from "../../../helpers/generateOtp";
 import emailSender from "../../../shared/emailSender";
 import prisma from "../../../shared/prisma";
-import { forgotPasswordTemplate } from "../../../helpars/template/forgotPasswordTemplate";
+import { forgotPasswordTemplate } from "../../../helpers/template/forgotPasswordTemplate";
 import { NotificationType, UserRole } from "@prisma/client";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 import { notificationService } from "../Notification/Notification.service";
 
 

@@ -4,11 +4,11 @@ import * as bcrypt from "bcrypt";
 import { NotificationType, User } from "@prisma/client";
 import config from "../../../config";
 import httpStatus from "http-status";
-import { jwtHelpers } from "../../../helpars/jwtHelpers";
+import { jwtHelpers } from "../../../helpers/jwtHelpers";
 import { omit } from "lodash";
 import { IUserFilters } from "./user.interface";
-import { fileUploader } from "../../../helpars/fileUploader";
-import { deleteImageAndFile } from "../../../helpars/fileDelete";
+import { fileUploader } from "../../../helpers/fileUploader";
+import { deleteImageAndFile } from "../../../helpers/fileDelete";
 import { notificationService } from "../Notification/Notification.service";
 
 // get user profile

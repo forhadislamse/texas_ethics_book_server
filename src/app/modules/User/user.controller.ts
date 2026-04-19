@@ -4,7 +4,7 @@ import sendResponse from "../../../shared/sendResponse";
 import { Request, Response } from "express";
 import ApiError from "../../../errors/ApiErrors";
 import { UserService } from "./user.services";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 
 // get user profile
 const getMyProfile = catchAsync(async (req: Request, res: Response) => {

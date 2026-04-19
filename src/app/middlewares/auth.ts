@@ -5,7 +5,7 @@ import { JwtPayload, Secret } from "jsonwebtoken";
 
 import httpStatus from "http-status";
 import ApiError from "../../errors/ApiErrors";
-import { jwtHelpers } from "../../helpars/jwtHelpers";
+import { jwtHelpers } from "../../helpers/jwtHelpers";
 import prisma from "../../shared/prisma";
 import { UserStatus } from "@prisma/client";
 

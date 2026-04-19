@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { fileUploadController } from './fileUpload.controller';
 import auth from '../../middlewares/auth';
 import { UserRole } from '@prisma/client';
-import { fileUploader } from '../../../helpars/fileUploader';
+import { fileUploader } from '../../../helpers/fileUploader';
 
 const router = Router();
 

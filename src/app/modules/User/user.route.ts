@@ -1,6 +1,6 @@
 import express from "express";
 import auth from "../../middlewares/auth";
-import { fileUploader } from "../../../helpars/fileUploader";
+import { fileUploader } from "../../../helpers/fileUploader";
 import { UserController } from "./user.controller";
 import multer from "multer";
 

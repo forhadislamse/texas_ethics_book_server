@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import ApiError from "../../../errors/ApiErrors";
-import { fileUploader } from "../../../helpars/fileUploader";
-import { deleteImageAndFile } from "../../../helpars/fileDelete";
+import { fileUploader } from "../../../helpers/fileUploader";
+import { deleteImageAndFile } from "../../../helpers/fileDelete";
 
 
 
