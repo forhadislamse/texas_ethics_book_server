@@ -51,6 +51,9 @@ export const corsOptions = {
 app.use(cors(corsOptions));
 app.use(cookieParser());
 
+// Stripe Webhook: raw body আগে রাখতে হবে, express.json() আগে পড়লে signature fail করে
+app.use('/api/v1/payment/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
