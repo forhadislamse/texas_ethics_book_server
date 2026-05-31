@@ -44,8 +44,11 @@ const updateProfileImage = catchAsync(async (req: Request, res: Response) => {
     throw new ApiError(400, "No image found");
   }
 
-  // DigitalOcean image upload
-  const uploaded = await fileUploader.uploadToDigitalOcean(file);
+  // ========== DigitalOcean Upload (Old - Commented) ==========
+  // const uploaded = await fileUploader.uploadToDigitalOcean(file);
+
+  // ========== Cloudinary Upload (New) ==========
+  const uploaded = await fileUploader.uploadToCloudinary(file);
   const imageUrl = uploaded.Location;
 
   // service call to update user profile image

@@ -127,6 +127,24 @@ const uploadToDigitalOcean = async (file: Express.Multer.File) => {
   }
 };
 
+// ✅ Cloudinary Delete
+const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result.result === "ok";
+  } catch (error) {
+    console.error("Error deleting file from Cloudinary:", error);
+    return false;
+  }
+};
+
+// ✅ Extract Cloudinary public_id from URL
+const extractCloudinaryPublicId = (imageUrl: string): string | null => {
+  // Example URL: https://res.cloudinary.com/cloud_name/image/upload/v123456/folder/public_id.jpg
+  const matches = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z]+)?$/);
+  return matches ? matches[1] : null;
+};
+
 // ✅ No Name Changes, Just Fixes
 export const fileUploader = {
   upload,
@@ -137,4 +155,6 @@ export const fileUploader = {
   cloudinaryUpload,
   uploadToDigitalOcean,
   uploadToCloudinary,
+  deleteFromCloudinary,
+  extractCloudinaryPublicId,
 };

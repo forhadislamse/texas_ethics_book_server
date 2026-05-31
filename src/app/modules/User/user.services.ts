@@ -64,12 +64,23 @@ const updateUserProfile = async (
 
   // Handle profile image upload
   if (file) {
-    const uploadedImageUrl = await fileUploader.uploadToDigitalOcean(file);
+    // ========== DigitalOcean Upload (Old - Commented) ==========
+    // const uploadedImageUrl = await fileUploader.uploadToDigitalOcean(file);
+    // updateData.profileImage = uploadedImageUrl.Location;
+    // if (user.profileImage) {
+    //   await deleteImageAndFile.deleteFileFromDigitalOcean(user.profileImage);
+    // }
+
+    // ========== Cloudinary Upload (New) ==========
+    const uploadedImageUrl = await fileUploader.uploadToCloudinary(file);
     updateData.profileImage = uploadedImageUrl.Location;
 
-    // Delete old image if exists
+    // Delete old image from Cloudinary if exists
     if (user.profileImage) {
-      await deleteImageAndFile.deleteFileFromDigitalOcean(user.profileImage);
+      const publicId = fileUploader.extractCloudinaryPublicId(user.profileImage);
+      if (publicId) {
+        await fileUploader.deleteFromCloudinary(publicId);
+      }
     }
   }
 
