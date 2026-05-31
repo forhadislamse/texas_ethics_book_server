@@ -13,7 +13,7 @@ const emailSender = async (email: string, html: string, subject: string) => {
   });
 
   const info = await transporter.sendMail({
-    from: `"Andcates Support" <${config.emailSender.email}>`,
+    from: `"Admin Support for OTP" <${config.emailSender.email}>`,
     to: email,
     subject: subject,
     html,

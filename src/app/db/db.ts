@@ -12,9 +12,9 @@ export const initiateSuperAdmin = async () => {
     );
  
     const payload: Prisma.UserCreateInput = {
-      email: "andrew@andrewcates.com",
-      fullName: "Andrew Cates",
-      phone: "512-426-4593",
+      email: "admin@gmail.com",
+      fullName: "Super Admin",
+      phone: "0123456789",
       password: hashedPassword,
       role: UserRole.ADMIN,
     };
