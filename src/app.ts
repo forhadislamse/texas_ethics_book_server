@@ -41,7 +41,8 @@ const app: Application = express();
 // });
 
 export const corsOptions = {
-  origin: ["https://books.andrewcates.com", "http://localhost:3000", "http://localhost:3001"],
+  origin: ["https://books.andrewcates.com", "http://localhost:3000", "http://localhost:3001", "http://10.0.20.160:3000",
+    "http://10.0.20.160:3001"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
   credentials: true,
