@@ -47,8 +47,21 @@ const confirmPayment = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
+const getMyPaymentHistory = catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user.id;
+    const result = await PaymentServices.getUserPaymentHistory(userId);
+
+    sendResponse(res, {
+        statusCode: httpStatus.OK,
+        success: true,
+        message: "Payment history retrieved successfully",
+        data: result,
+    });
+});
+
 export const PaymentController = {
     createSubscriptionIntent,
     handleWebhook,
-    confirmPayment
+    confirmPayment,
+    getMyPaymentHistory
 };

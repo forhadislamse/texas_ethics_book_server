@@ -322,8 +322,30 @@ const cancelOtherSubscriptions = async (customerId: string, activeSubId: string)
     }
 };
 
+// Get user's payment history
+const getUserPaymentHistory = async (userId: string) => {
+    const payments = await prisma.payment.findMany({
+        where: { userId },
+        include: {
+            plan: {
+                select: {
+                    name: true,
+                    price: true,
+                    currency: true,
+                    duration: true,
+                    features: true,
+                }
+            }
+        },
+        orderBy: { createdAt: 'desc' },
+    });
+
+    return payments;
+};
+
 export const PaymentServices = {
     createSubscriptionIntent,
     handleWebhook,
-    confirmPayment
+    confirmPayment,
+    getUserPaymentHistory
 };
