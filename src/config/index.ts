@@ -47,6 +47,17 @@ export default {
     authToken: process.env.TWILIO_AUTH_TOKEN,
     twilioPhoneNumber: process.env.TWILIO_PHONE_NUMBER,
   },
+  resend: {
+    apiKey: process.env.RESEND_API_KEY,
+    audienceId: process.env.RESEND_AUDIENCE_ID,
+  },
+
+mailchimp: {
+  apiKey: process.env.MAILCHIMP_API_KEY,
+  serverPrefix: process.env.MAILCHIMP_SERVER_PREFIX,
+  audienceId: process.env.MAILCHIMP_AUDIENCE_ID,
+},
+
   digitalOcean: {
     endpoint: process.env.DO_SPACE_ENDPOINT,
     originEndpoint: process.env.DO_SPACE_ORIGIN_ENDPOINT,

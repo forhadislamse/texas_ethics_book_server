@@ -9,8 +9,10 @@ import { PlanRoutes } from "../modules/Plan/plan.route";
 import { fileUploadRoutes } from "../modules/fileUpload/fileUpload.routes";
 import admin from "../../shared/firebase";
 
+
 // import { NotificationRoutes } from "../modules/Notification/Notification.routes";
 import { AdminRoutes } from "../modules/admin/admin.routes";
+import { NewsletterRoutes } from "../modules/Newsletter/newsletter.routes";
 
 // import { userCategoryInterestRoutes } from "../modules/admin/userCategoryInterest/userCategoryInterest.routes";
 
@@ -55,6 +57,10 @@ const moduleRoutes = [
   {
     path: "/admin",
     route: AdminRoutes,
+  },
+  {
+    path: "/newsletter",
+    route: NewsletterRoutes,
   },
 ];
 
