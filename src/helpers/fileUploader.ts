@@ -70,8 +70,7 @@ const uploadToCloudinary = async (
       {
         folder: "uploads",
         resource_type: "auto", // Supports images, videos, etc.
-        use_filename: true,
-        unique_filename: false,
+        public_id: `${Date.now()}_${uuidv4()}_${file.originalname.replace(/\\s+/g, "_").split('.')[0]}`,
       },
       (error, result) => {
         if (error) {
