@@ -244,7 +244,13 @@ const getSubscriptionAnalytics = async (query: {
         limit: query.limit ? Number(query.limit) : 5
     });
 
-    const where = { status: PaymentStatus.PAID };
+    const where: any = { 
+        status: PaymentStatus.PAID,
+        user: {
+            isSubscribed: true,
+            subscriptionExpiresAt: { gt: now }
+        }
+    };
 
     // Validate sortBy field for Payment model
     const validSortFields = ['createdAt', 'amount', 'status', 'transactionId', 'updatedAt'];
@@ -270,12 +276,13 @@ const getSubscriptionAnalytics = async (query: {
                 }
             }
         },
+        distinct: ['userId'],
         orderBy: { [finalSortBy]: sortOrder },
         skip,
         take: limit
     });
 
-    const total = await prisma.payment.count({ where });
+    const total = activeSubscriptionCount;
 
     return {
         activeSubscriptionCount,
