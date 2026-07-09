@@ -7,38 +7,6 @@ import GlobalErrorHandler from "./app/middlewares/globalErrorHandler";
 import router from "./app/routes";
 
 const app: Application = express();
-// // export const corsOptions = {
-// //   origin: ["http://localhost:3001", "http://localhost:3000", "https://sendiate-dashboard.vercel.app/",],
-// //   methods: ["GET", "POST", "PUT", "DELETE"],
-// //   allowedHeaders: ["Content-Type", "Authorization"],
-// //   credentials: true,
-// // };
-
-// // Middleware setup
-// app.use(cors());
-// app.use(cookieParser());
-
-// // Special handling for Stripe Webhook to get raw body
-// app.use(
-//   express.json({
-//     verify: (req: any, res, buf) => {
-//       if (req.originalUrl.includes("/webhook")) {
-//         req.rawBody = buf;
-//       }
-//     },
-//   })
-// );
-// app.use(express.urlencoded({ extended: true }));
-// app.use(express.static("public"));
-
-// // Route handler for root endpoint
-// app.get("/", (req: Request, res: Response) => {
-//   res.send({
-//     success: true,
-//     statusCode: httpStatus.OK,
-//     message: "The server is running!",
-//   });
-// });
 
 export const corsOptions = {
   origin: ["https://books.andrewcates.com", "http://localhost:3000", "http://localhost:3001", "http://10.10.13.4:3000",
@@ -67,6 +35,7 @@ app.get("/", (req: Request, res: Response) => {
     message: "The server is running!",
   });
 });
+
 
 // Router setup
 app.use("/api/v1", router);
