@@ -212,7 +212,7 @@ const forgotPassword = async (payload: { email: string }) => {
     const html = `Here is your OTP code: ${otp}. It will expire in 5 minutes.`;
 
     if (userData.email) {
-      await emailSender(userData.email, html, "Andcates Password OTP");
+      await emailSender(userData.email, html, "Reset Password OTP");
       // await brevoMailSender(userData.email, html, "Andcates Password OTP");
     }
   } catch (error) {
