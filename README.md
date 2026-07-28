@@ -25,7 +25,6 @@ https://documenter.getpostman.com/view/34968572/2sBY4SLyYk
 - [Features](#features)
 - [Technology Used](#technology-used)
 - [Folder Structure](#folder-structure)
-- [API Endpoints](#api-endpoints)
 - [Licenses](#licenses)
 
 
