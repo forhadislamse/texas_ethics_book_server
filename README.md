@@ -162,4 +162,4 @@ npm run build
 
 This project is proprietary and intended for the Texas Ethics Law Book platform.
 
-## Happy Coding 🚀
+## Happy Coding! 
