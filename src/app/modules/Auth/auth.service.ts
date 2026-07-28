@@ -61,6 +61,13 @@ const createUserIntoDb = async (payload: any) => {
     },
   });
 
+  try {
+    const html = `Here is your OTP code for verifying your email: ${otp}. It will expire in 5 minutes.`;
+    await emailSender(email, html, "Verify Your Email");
+  } catch (error) {
+    console.error("Failed to send verification email:", error);
+  }
+
   const token = jwtHelpers.generateToken(
     { id: newUser.id, email: newUser.email, role: newUser.role, isSubscribed: newUser.isSubscribed },
     config.jwt.jwt_secret!,
