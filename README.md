@@ -8,13 +8,14 @@ A comprehensive backend system for the **Texas Ethics Law Book** digital practic
 
 Technologies Used: **Node.js, Express.js, TypeScript, Prisma, MongoDB, JWT Auth, Stripe Payment Gateway, Cloudinary/DigitalOcean Spaces, Resend/Mailchimp, VPS Hosting (Vercel/DigitalOcean)**.
 
-**Base URL**
-
 **Local:**  
 http://localhost:23078/api/v1
 
 **Live:**  
 https://texas-ethics-book-server.vercel.app/api/v1
+
+**Postman Documentation**
+https://documenter.getpostman.com/view/34968572/2sBY4SLyYk
 
 ## Table of Contents
 
