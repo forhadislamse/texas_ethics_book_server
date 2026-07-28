@@ -1,7 +1,7 @@
 # Texas Ethics Law Book (Backend)
 
 <p align="center">
-  <img src="https://ui-avatars.com/api/?name=Texas+Ethics&background=0D7C84&color=fff&size=150" alt="Texas Ethics Book App" width="150" height="150"/>
+  <img src="./assets/logo.png" alt="Texas Ethics Book App" width="150" height="150"/>
 </p>
 
 A comprehensive backend system for the **Texas Ethics Law Book** digital practice guide. It serves as the core API for a modern e-learning and reading platform where users can study over 550 pages of annotated ethics rules, statutes, and case law. The system includes robust authentication, role-based access control, subscription management via Stripe, dynamic guide content serving (chapters and sections), newsletter integrations, and an admin dashboard.
