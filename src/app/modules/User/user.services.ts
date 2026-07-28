@@ -75,13 +75,22 @@ const updateUserProfile = async (
     const uploadedImageUrl = await fileUploader.uploadToCloudinary(file);
     updateData.profileImage = uploadedImageUrl.Location;
 
-    // Delete old image from Cloudinary if exists
+    // Delete old image from Cloudinary if exists and it's not being used by other users
+    // Commented out as per user request to never replace/delete old images
+    /*
     if (user.profileImage) {
-      const publicId = fileUploader.extractCloudinaryPublicId(user.profileImage);
-      if (publicId) {
-        await fileUploader.deleteFromCloudinary(publicId);
+      const usersWithSameImage = await prisma.user.count({
+        where: { profileImage: user.profileImage },
+      });
+
+      if (usersWithSameImage <= 1) {
+        const publicId = fileUploader.extractCloudinaryPublicId(user.profileImage);
+        if (publicId) {
+          await fileUploader.deleteFromCloudinary(publicId);
+        }
       }
     }
+    */
   }
 
   // Only update fields that are provided or image is updated

@@ -9,6 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import streamifier from "streamifier";
 import dotenv from "dotenv";
+import crypto from "crypto";
 
 dotenv.config();
 
@@ -66,11 +67,16 @@ const uploadToCloudinary = async (
   }
 
   return new Promise((resolve, reject) => {
+    // Create an MD5 hash of the file buffer to prevent duplicate uploads
+    const fileHash = crypto.createHash("md5").update(file.buffer).digest("hex");
+    const sanitizedName = file.originalname.replace(/\s+/g, "_").split('.')[0];
+    const uniquePublicId = `${fileHash}_${sanitizedName}`;
+
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder: "uploads",
         resource_type: "auto", // Supports images, videos, etc.
-        public_id: `${Date.now()}_${uuidv4()}_${file.originalname.replace(/\\s+/g, "_").split('.')[0]}`,
+        public_id: uniquePublicId,
       },
       (error, result) => {
         if (error) {
@@ -140,7 +146,7 @@ const deleteFromCloudinary = async (publicId: string): Promise<boolean> => {
 // ✅ Extract Cloudinary public_id from URL
 const extractCloudinaryPublicId = (imageUrl: string): string | null => {
   // Example URL: https://res.cloudinary.com/cloud_name/image/upload/v123456/folder/public_id.jpg
-  const matches = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-z]+)?$/);
+  const matches = imageUrl.match(/\/upload\/(?:v\d+\/)?(.+?)(?:\.[a-zA-Z0-9]+)?$/);
   return matches ? matches[1] : null;
 };
 
