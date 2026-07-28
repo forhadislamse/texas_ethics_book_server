@@ -9,8 +9,8 @@ import router from "./app/routes";
 const app: Application = express();
 
 export const corsOptions = {
-  origin: ["https://books.andrewcates.com", "http://localhost:3000", "http://localhost:3001", "http://10.10.13.4:3000",
-    "http://10.10.13.4:3001"],
+  origin: ["http://localhost:3000", "http://localhost:3001", "http://10.10.13.4:3000",
+    "http://10.10.13.4:3001", "https://texas-ethics-book-frontend.vercel.app"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization", "stripe-signature"],
   credentials: true,
